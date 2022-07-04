@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fake CMS</title>
+
+    <script
+      defer
+      src="https://unpkg.com/alpinejs-textarea-grow@1.0.0/dist/grow.min.js"
+    ></script>
+
+    <script
+      defer
+      src="https://unpkg.com/@alpinejs/persist@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <script
+      defer
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  </head>
+  <body x-data="fakeCms" x-effect="refreshHtml">
+    <main>
+      <div class="grid grid-cols-2 gap-4 align-start">
+        <div class="bg-gray-50 p-8 sticky top-0 h-screen overflow-auto">
+          <div class="flex gap-1">
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('# ')"
+            >
+              H1
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('## ')"
+            >
+              H2
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('### ')"
+            >
+              H3
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('#### ')"
+            >
+              H4
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('**', '**')"
+            >
+              B
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('- ')"
+            >
+              &middot;
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('1. ')"
+            >
+              1.
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('> ')"
+            >
+              "
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('`', '`')"
+            >
+              `
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('```', '```')"
+            >
+              ```
+            </button>
+
+            <button
+              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
+              x-on:click="modifyMarkdown('![](', ')')"
+            >
+              🎆
+            </button>
+          </div>
+
+          <textarea
+            class="w-full min-h-[300px] rounded-lg p-4 border-none shadow-sm mt-4"
+            x-model="contentMarkdown"
+            x-ref="textarea"
+            x-grow
+            placeholder="Enter markdown..."
+          >
+          </textarea>
+        </div>
+
+        <div class="bg-white p-8">
+          <article class="max-w-none prose" x-html="contentHtml"></article>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("fakeCms", () => ({
+          contentMarkdown: Alpine.$persist("Hello there..."),
+          contentHtml: "",
+
+          modifyMarkdown(syntaxBefore, syntaxAfter) {
+            const markdownTextarea = this.$refs.textarea;
+
+            const markdownTextStart = markdownTextarea.selectionStart;
+            const markdownTextEnd = markdownTextarea.selectionEnd;
+
+            const markdownSelectedText = markdownTextarea.value.slice(
+              markdownTextStart,
+              markdownTextEnd
+            );
+
+            const markdownTextBeforeSelection = markdownTextarea.value.slice(
+              0,
+              markdownTextStart
+            );
+
+            const markdownTextAfterSelection =
+              markdownTextarea.value.slice(markdownTextEnd);
+
+            this.contentMarkdown = markdownSelectedText.includes(syntaxBefore)
+              ? this.modifyMarkdownRemove(
+                  markdownTextBeforeSelection,
+                  markdownTextAfterSelection,
+                  markdownSelectedText,
+                  syntaxBefore,
+                  syntaxAfter
+                )
+              : this.modifyMarkdownAdd(
+                  markdownTextBeforeSelection,
+                  markdownTextAfterSelection,
+                  markdownSelectedText,
+                  syntaxBefore,
+                  syntaxAfter
+                );
+
+            markdownTextarea.focus();
+          },
+
+          modifyMarkdownAdd(
+            textBeforeSelection,
+            textAfterSelection,
+            selectedText,
+            syntaxBefore,
+            syntaxAfter = ""
+          ) {
+            return syntaxBefore === "```"
+              ? `${textBeforeSelection}${syntaxBefore}\n${selectedText}\n${syntaxAfter}${textAfterSelection}`
+              : `${textBeforeSelection}${syntaxBefore}${selectedText}${syntaxAfter}${textAfterSelection}`;
+          },
+
+          modifyMarkdownRemove(
+            textBeforeSelection,
+            textAfterSelection,
+            selectedText,
+            syntaxBefore,
+            syntaxAfter = ""
+          ) {
+            const updatedSelectedMarkdown = selectedText
+              .replace(syntaxBefore, "")
+              .replace(syntaxAfter, "");
+
+            return `${textBeforeSelection}${updatedSelectedMarkdown}${textAfterSelection}`;
+          },
+
+          refreshHtml() {
+            this.contentHtml = new showdown.Converter().makeHtml(
+              this.contentMarkdown
+            );
+          },
+        }));
+      });
+    </script>
+  </body>
+</html>
