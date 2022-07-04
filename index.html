@@ -8,7 +8,7 @@
 
     <script
       defer
-      src="https://unpkg.com/alpinejs-textarea-grow@1.0.0/dist/grow.min.js"
+      src="https://unpkg.com/alpinejs-persist-extended@latest/dist/storage.min.js"
     ></script>
 
     <script
@@ -24,111 +24,183 @@
     <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+
+    <style>
+      [x-cloak] {
+        display: none;
+      }
+    </style>
   </head>
-  <body x-data="fakeCms" x-effect="refreshHtml">
-    <main>
-      <div class="grid grid-cols-2 gap-4 align-start">
-        <div class="bg-gray-50 p-8 sticky top-0 h-screen overflow-auto">
-          <div class="flex gap-1">
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('# ')"
-            >
-              H1
-            </button>
+  <body
+    x-data="fakeCms"
+    x-effect="refreshHtml"
+    x-on:storage-delete="refreshComponent"
+    class="bg-slate-900 relative"
+  >
+    <main role="main">
+      <div class="grid grid-cols-1 lg:grid-cols-2 lg:align-start">
+        <div
+          class="bg-slate-900 px-4 sm:px-6 lg:px-8 py-8 lg:py-12 lg:sticky lg:top-0 h-screen overflow-auto"
+        >
+          <div class="flex justify-between gap-4">
+            <div class="flex gap-4">
+              <div class="flex gap-1">
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('# ')"
+                >
+                  H1
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('## ')"
-            >
-              H2
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('## ')"
+                >
+                  H2
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('### ')"
-            >
-              H3
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('### ')"
+                >
+                  H3
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('#### ')"
-            >
-              H4
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('#### ')"
+                >
+                  H4
+                </button>
+              </div>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('**', '**')"
-            >
-              B
-            </button>
+              <div class="flex gap-1">
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('**', '**')"
+                >
+                  B
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('- ')"
-            >
-              &middot;
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('_', '_')"
+                >
+                  I
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('1. ')"
-            >
-              1.
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('~~', '~~')"
+                >
+                  ~
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('> ')"
-            >
-              "
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('- ')"
+                >
+                  &middot;
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('`', '`')"
-            >
-              `
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('1. ')"
+                >
+                  1.
+                </button>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('```', '```')"
-            >
-              ```
-            </button>
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('> ')"
+                >
+                  "
+                </button>
+              </div>
 
-            <button
-              class="bg-white border rounded-md w-8 h-8 inline-flex items-center justify-center text-xs"
-              x-on:click="modifyMarkdown('![](', ')')"
-            >
-              🎆
-            </button>
+              <div class="flex gap-1">
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('`', '`')"
+                >
+                  `
+                </button>
+
+                <button
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                  x-on:click="modifyMarkdown('```', '```')"
+                >
+                  ```
+                </button>
+              </div>
+
+              <button
+                class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                x-on:click="modifyMarkdown('![](', ')')"
+              >
+                🎆
+              </button>
+            </div>
+
+            <div class="flex gap-1">
+              <button
+                class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                x-on:click="copyMarkdown"
+              >
+                📀
+              </button>
+
+              <button
+                class="border rounded-md w-8 h-8 grid place-content-center text-[10px] bg-slate-800 text-white border-slate-700 focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium"
+                x-on:click="$storage('contentMarkdown', 'delete')"
+              >
+                🗑
+              </button>
+            </div>
           </div>
 
           <textarea
-            class="w-full min-h-[300px] rounded-lg p-4 border-none shadow-sm mt-4"
+            class="w-full h-[600px] rounded-xl p-6 shadow-xl mt-4 resize-none shadow-pink-500/5 border-slate-700 bg-slate-800 text-white"
             x-model="contentMarkdown"
             x-ref="textarea"
-            x-grow
             placeholder="Enter markdown..."
           >
           </textarea>
         </div>
 
-        <div class="bg-white p-8">
-          <article class="max-w-none prose" x-html="contentHtml"></article>
+        <div
+          class="dark:bg-slate-900 px-8 sm:px-6 lg:px-8 py-8 lg:py-12 lg:border-l dark:border-slate-800"
+        >
+          <article
+            class="max-w-none prose dark:prose-invert"
+            x-html="contentHtml"
+          ></article>
         </div>
       </div>
     </main>
 
+    <div
+      x-cloak
+      x-transition
+      x-show="flashNotification"
+      class="fixed bottom-4 inset-x-0 flex justify-center"
+    >
+      <div
+        x-cloak
+        x-show="flashNotification"
+        role="alert"
+        class="bg-slate-800 p-4 border border-slate-700 rounded-lg shadow-pink-500/5 text-white text-sm font-medium"
+      >
+        Copied to Clipboard! 🎉
+      </div>
+    </div>
+
     <script>
       document.addEventListener("alpine:init", () => {
         Alpine.data("fakeCms", () => ({
-          contentMarkdown: Alpine.$persist("Hello there..."),
+          contentMarkdown: Alpine.$persist("# Hello there..."),
           contentHtml: "",
+          flashNotification: false,
 
           modifyMarkdown(syntaxBefore, syntaxAfter) {
             const markdownTextarea = this.$refs.textarea;
@@ -194,10 +266,22 @@
             return `${textBeforeSelection}${updatedSelectedMarkdown}${textAfterSelection}`;
           },
 
+          copyMarkdown() {
+            navigator.clipboard.writeText(this.contentMarkdown);
+
+            this.flashNotification = true;
+
+            setTimeout(() => (this.flashNotification = false), 2500);
+          },
+
           refreshHtml() {
             this.contentHtml = new showdown.Converter().makeHtml(
               this.contentMarkdown
             );
+          },
+
+          refreshComponent() {
+            this.contentMarkdown = "";
           },
         }));
       });
