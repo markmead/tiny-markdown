@@ -1,12 +1,7 @@
 <!DOCTYPE html>
 <html
   lang="en"
-  x-data="{ darkMode: $persist(false) }"
-  x-init="
-    darkMode = $storage('darkMode')
-      ? darkMode
-      : window.matchMedia('(prefers-color-scheme: dark)').matches
-  "
+  x-data="{ darkMode: $persist(window.matchMedia('(prefers-color-scheme: dark)').matches) }"
   :class="{ 'dark': darkMode }"
 >
   <head>
