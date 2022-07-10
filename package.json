@@ -1,4 +1,6 @@
 {
+  "name": "tiny-markdown",
+  "private": true,
   "scripts": {
     "watch": "npx tailwindcss -i ./src/index.css -o ./build/index.css -w",
     "build": "npx tailwindcss -i ./src/index.css -o ./build/index.css -m"
