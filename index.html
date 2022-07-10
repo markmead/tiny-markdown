@@ -32,10 +32,7 @@
       property="og:description"
       content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
     />
-    <meta
-      property="og:image"
-      content="https://tiny-markdown.vercel.app/static/cover.jpg"
-    />
+    <meta property="og:image" content="/src/cover.jpg" />
 
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://tiny-markdown.vercel.app/" />
@@ -47,10 +44,7 @@
       property="twitter:description"
       content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
     />
-    <meta
-      property="twitter:image"
-      content="https://tiny-markdown.vercel.app/static/cover.jpg"
-    />
+    <meta property="twitter:image" content="/src/cover.jpg" />
 
     <script
       defer
@@ -69,13 +63,13 @@
 
     <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <!-- <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
     <script>
       tailwind.config = {
         darkMode: "class",
       };
-    </script>
+    </script> -->
 
     <script src="https://www.googletagmanager.com/gtag/js?id=G-8D5JJCZEP2"></script>
 
@@ -88,11 +82,7 @@
       gtag("config", "G-8D5JJCZEP2");
     </script>
 
-    <style>
-      [x-cloak] {
-        display: none;
-      }
-    </style>
+    <link href="/build/index.css" rel="stylesheet" />
   </head>
   <body
     x-data="fakeCms"
