@@ -77,16 +77,7 @@
       };
     </script>
 
-    <style>
-      [x-cloak] {
-        display: none;
-      }
-    </style>
-
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-8D5JJCZEP2"
-    ></script>
+    <script src="https://www.googletagmanager.com/gtag/js?id=G-8D5JJCZEP2"></script>
 
     <script>
       // prettier-ignore
@@ -96,6 +87,12 @@
       gtag("js", new Date());
       gtag("config", "G-8D5JJCZEP2");
     </script>
+
+    <style>
+      [x-cloak] {
+        display: none;
+      }
+    </style>
   </head>
   <body
     x-data="fakeCms"
@@ -104,21 +101,22 @@
     class="dark:bg-[#111] bg-[#FAFAFA] relative"
   >
     <main role="main">
-      <div class="grid grid-cols-1 lg:grid-cols-2 lg:align-start min-h-screen">
+      <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2 lg:align-start">
         <div
-          class="px-4 sm:px-6 lg:px-8 py-8 lg:py-12 lg:h-screen overflow-auto flex flex-col"
+          class="flex flex-col px-4 py-8 overflow-auto sm:px-6 lg:px-8 lg:py-12 lg:h-screen"
         >
-          <div class="flex justify-between items-center">
-            <h1 class="dark:text-white text-lg font-bold">Tiny Markdown</h1>
+          <div class="flex items-center justify-between">
+            <h1 class="text-lg font-bold dark:text-white">Tiny Markdown</h1>
 
             <button
               x-on:click="darkMode = !darkMode"
+              :aria-label="`Toggle dark mode ${darkMode ? 'off': 'on'}`"
               class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
             >
               <span x-show="darkMode">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
+                  class="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -135,7 +133,7 @@
               <span x-show="!darkMode">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
+                  class="w-4 h-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -159,6 +157,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('# ')"
+                  aria-label="Heading one"
                 >
                   H1
                 </button>
@@ -166,6 +165,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('## ')"
+                  aria-label="Heading two"
                 >
                   H2
                 </button>
@@ -173,6 +173,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('### ')"
+                  aria-label="Heading three"
                 >
                   H3
                 </button>
@@ -180,6 +181,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('#### ')"
+                  aria-label="Heading four"
                 >
                   H4
                 </button>
@@ -189,6 +191,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('**', '**')"
+                  aria-label="Bold text"
                 >
                   B
                 </button>
@@ -196,6 +199,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('_', '_')"
+                  aria-label="Italic text"
                 >
                   I
                 </button>
@@ -203,6 +207,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('~~', '~~')"
+                  aria-label="Strikethrough text"
                 >
                   ~
                 </button>
@@ -210,6 +215,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('- ')"
+                  aria-label="Bullet point"
                 >
                   &bull;
                 </button>
@@ -217,6 +223,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('1. ')"
+                  aria-label="Numbered list"
                 >
                   1.
                 </button>
@@ -224,6 +231,7 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('> ')"
+                  aria-label="Quote text"
                 >
                   <span class="trangray-y-0.5"> &ldquo;&rdquo; </span>
                 </button>
@@ -233,10 +241,11 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('`', '`')"
+                  aria-label="Code text"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-3 w-3"
+                    class="w-3 h-3"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -253,10 +262,11 @@
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   x-on:click="modifyMarkdown('```', '```')"
+                  aria-label="Code block"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-3 w-3"
+                    class="w-3 h-3"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -274,10 +284,11 @@
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                 x-on:click="modifyMarkdown('![](', ')')"
+                aria-label="Image"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3"
+                  class="w-3 h-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -296,10 +307,11 @@
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                 x-on:click="copyMarkdown"
+                aria-label="Copy markdown"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3"
+                  class="w-3 h-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -316,10 +328,11 @@
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                 x-on:click="$storage('contentMarkdown', 'delete')"
+                aria-label="Delete markdown"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3"
+                  class="w-3 h-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -335,7 +348,7 @@
             </div>
           </div>
 
-          <div class="mt-4 flex-1">
+          <div class="flex-1 mt-4">
             <textarea
               class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               x-model="contentMarkdown"
@@ -354,7 +367,7 @@
                 href="https://twitter.com/itsmarkmead"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="underline inline-block focus:outline-none focus:text-pink-500 hover:text-pink-500 transition"
+                class="inline-block underline transition focus:outline-none focus:text-pink-500 hover:text-pink-500"
               >
                 @itsmarkmead
               </a>
@@ -367,7 +380,7 @@
                 href="https://github.com/markmead/tiny-markdown"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="underline inline-block focus:outline-none focus:text-pink-500 hover:text-pink-500 transition"
+                class="inline-block underline transition focus:outline-none focus:text-pink-500 hover:text-pink-500"
               >
                 GitHub
               </a>
@@ -376,10 +389,10 @@
         </div>
 
         <div
-          class="bg-white h-full lg:h-screen overflow-auto dark:bg-black px-8 sm:px-6 lg:px-8 py-8 lg:py-12"
+          class="h-full px-8 py-8 overflow-auto bg-white lg:h-screen dark:bg-black sm:px-6 lg:px-8 lg:py-12"
         >
           <article
-            class="max-w-none prose dark:prose-invert"
+            class="prose max-w-none dark:prose-invert"
             x-html="contentHtml"
           ></article>
         </div>
@@ -390,7 +403,7 @@
       x-cloak
       x-transition
       x-show="flashNotification"
-      class="fixed bottom-4 inset-x-0 flex justify-center"
+      class="fixed inset-x-0 flex justify-center bottom-4"
     >
       <div
         x-cloak
@@ -402,7 +415,7 @@
       </div>
     </div>
 
-    <script>
+    <script defer>
       document.addEventListener("alpine:init", () => {
         Alpine.data("fakeCms", () => ({
           contentMarkdown: Alpine.$persist("# Hello there..."),
