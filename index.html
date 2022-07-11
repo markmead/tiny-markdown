@@ -8,19 +8,15 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tiny Markdown 🤏 | Online Markdown Editor</title>
-    <meta
-      name="description"
-      content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
-    />
-    <link rel="icon" href="https://fav.farm/📝" />
 
     <title>Tiny Markdown 🤏 | Online Markdown Editor</title>
-    <meta name="title" content="Tiny Markdown 🤏 | Online Markdown Editor" />
+
     <meta
       name="description"
       content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
     />
+
+    <link rel="icon" href="https://fav.farm/📝" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tiny-markdown.vercel.app/" />
@@ -85,7 +81,7 @@
     x-on:storage-delete="refreshComponent"
     class="dark:bg-[#111] bg-[#FAFAFA] relative"
   >
-    <main role="main">
+    <main>
       <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2 lg:align-start">
         <div
           class="flex flex-col px-4 py-8 overflow-auto sm:px-6 lg:px-8 lg:py-12 lg:h-screen"
@@ -203,7 +199,7 @@
 
               <button
                 x-on:click="darkMode = !darkMode"
-                :aria-label="`Toggle dark mode ${darkMode ? 'off': 'on'}`"
+                aria-label="Toggle dark mode"
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
               >
                 <span x-show="darkMode">
@@ -510,7 +506,7 @@
       </div>
     </div>
 
-    <script defer>
+    <script>
       document.addEventListener("alpine:init", () => {
         Alpine.data("fakeCms", () => ({
           contentMarkdown: Alpine.$persist("# Hello there..."),
@@ -606,6 +602,8 @@
 
           deleteRevision(localStorageRevisionKey) {
             localStorage.removeItem(localStorageRevisionKey);
+
+            this.setRevisions();
           },
 
           deleteRevisions() {
