@@ -94,26 +94,111 @@
             <h1 class="text-lg font-bold dark:text-white">Tiny Markdown</h1>
 
             <div class="flex gap-4">
-              <div>
-                <label for="revisions" class="sr-only">Revisions</label>
-
-                <select
-                  id="revisions"
-                  x-model="selectedRevision"
-                  x-on:change="useRevision"
-                  class="rounded-md py-0 h-8 text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
+              <div class="relative" x-data="{ showMenu: false }">
+                <button
+                  x-on:click="showMenu = !showMenu"
+                  class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
                 >
-                  <option value="" disabled>Latest Revision</option>
-                  <template
-                    x-for="contentRevision in contentRevisions"
-                    :key="contentRevision.key"
+                  <span
+                    class="text-[10px] font-medium"
+                    x-text="selectedRevisionLabel"
+                  ></span>
+
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    <option
-                      :value="contentRevision.key"
-                      x-text="contentRevision.label"
-                    ></option>
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                <div
+                  class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
+                  role="menu"
+                  x-show="showMenu"
+                  x-cloak
+                  x-on:click.away="showMenu = false"
+                >
+                  <template x-if="contentRevisions.length">
+                    <ul class="p-2">
+                      <template
+                        x-for="contentRevision in contentRevisions"
+                        :key="contentRevision.key"
+                      >
+                        <li
+                          class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
+                          role="menuitem"
+                        >
+                          <button
+                            x-on:click="useRevision(contentRevision.key, contentRevision.label)"
+                            class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
+                            x-text="contentRevision.label"
+                          ></button>
+
+                          <button
+                            x-on:click="deleteRevision(contentRevision.key)"
+                            class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="w-3 h-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              stroke-width="2"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </li>
+                      </template>
+                    </ul>
                   </template>
-                </select>
+
+                  <template x-if="! contentRevisions.length">
+                    <div
+                      class="p-4 text-[10px] font-medium dark:text-white text-black text-center"
+                    >
+                      Nothing to see here...
+                    </div>
+                  </template>
+
+                  <div class="p-2 border-t border-[#EAEAEA] dark:border-[#333]">
+                    <button
+                      class="flex items-center gap-2 p-2 text-red-600 transition font-med ium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
+                      x-on:click="deleteRevisions"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-3 h-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+
+                      <span class="text-[10px] font-medium">
+                        Delete Revisions
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <button
@@ -431,7 +516,7 @@
           contentMarkdown: Alpine.$persist("# Hello there..."),
           contentHtml: "",
           contentRevisions: [],
-          selectedRevision: "",
+          selectedRevisionLabel: "Latest Revision",
           flashNotification: false,
 
           init() {
@@ -519,20 +604,20 @@
             this.setRevisions();
           },
 
-          useRevision() {
-            this.contentMarkdown = localStorage.getItem(this.selectedRevision);
+          deleteRevision(localStorageRevisionKey) {
+            localStorage.removeItem(localStorageRevisionKey);
           },
 
-          refreshHtml() {
-            this.contentHtml = new showdown.Converter({
-              noHeaderId: true,
-              strikethrough: true,
-              tables: true,
-            }).makeHtml(this.contentMarkdown);
-          },
+          deleteRevisions() {
+            const localStorageRevisions = Object.keys(localStorage).filter(
+              (localStorageKey) => localStorageKey.includes("_r_")
+            );
 
-          refreshComponent() {
-            this.contentMarkdown = "# Hello There...";
+            localStorageRevisions.forEach((localStorageRevisionKey) =>
+              localStorage.removeItem(localStorageRevisionKey)
+            );
+
+            this.setRevisions();
           },
 
           setRevisions() {
@@ -567,6 +652,26 @@
                 };
               }
             );
+          },
+
+          useRevision(localStorageRevisionKey, localStorageRevisionLabel) {
+            this.contentMarkdown = localStorage.getItem(
+              localStorageRevisionKey
+            );
+
+            this.selectedRevisionLabel = localStorageRevisionLabel;
+          },
+
+          refreshHtml() {
+            this.contentHtml = new showdown.Converter({
+              noHeaderId: true,
+              strikethrough: true,
+              tables: true,
+            }).makeHtml(this.contentMarkdown);
+          },
+
+          refreshComponent() {
+            this.contentMarkdown = "# Hello There...";
           },
         }));
       });
