@@ -44,11 +44,6 @@
 
     <script
       defer
-      src="https://unpkg.com/alpinejs-persist-extended@latest/dist/storage.min.js"
-    ></script>
-
-    <script
-      defer
       src="https://unpkg.com/@alpinejs/persist@3.x.x/dist/cdn.min.js"
     ></script>
 
@@ -78,7 +73,6 @@
   <body
     x-data="fakeCms"
     x-effect="refreshHtml"
-    x-on:storage-delete="refreshComponent"
     class="dark:bg-[#111] bg-[#FAFAFA] relative"
   >
     <main>
@@ -417,7 +411,7 @@
 
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="$storage('contentMarkdown', 'delete')"
+                x-on:click="deleteMarkdown"
                 aria-label="Delete markdown"
               >
                 <svg
@@ -589,6 +583,10 @@
             this.flashNotification = true;
 
             setTimeout(() => (this.flashNotification = false), 2500);
+          },
+
+          deleteMarkdown() {
+            this.refreshComponent();
           },
 
           saveRevision() {
