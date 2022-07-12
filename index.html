@@ -8,19 +8,15 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tiny Markdown 🤏 | Online Markdown Editor</title>
-    <meta
-      name="description"
-      content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
-    />
-    <link rel="icon" href="https://fav.farm/📝" />
 
     <title>Tiny Markdown 🤏 | Online Markdown Editor</title>
-    <meta name="title" content="Tiny Markdown 🤏 | Online Markdown Editor" />
+
     <meta
       name="description"
       content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
     />
+
+    <link rel="icon" href="https://fav.farm/📝" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tiny-markdown.vercel.app/" />
@@ -45,11 +41,6 @@
       content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
     />
     <meta property="twitter:image" content="/src/cover.jpg" />
-
-    <script
-      defer
-      src="https://unpkg.com/alpinejs-persist-extended@latest/dist/storage.min.js"
-    ></script>
 
     <script
       defer
@@ -82,10 +73,9 @@
   <body
     x-data="fakeCms"
     x-effect="refreshHtml"
-    x-on:storage-delete="refreshComponent"
     class="dark:bg-[#111] bg-[#FAFAFA] relative"
   >
-    <main role="main">
+    <main>
       <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2 lg:align-start">
         <div
           class="flex flex-col px-4 py-8 overflow-auto sm:px-6 lg:px-8 lg:py-12 lg:h-screen"
@@ -93,45 +83,154 @@
           <div class="flex items-center justify-between">
             <h1 class="text-lg font-bold dark:text-white">Tiny Markdown</h1>
 
-            <button
-              x-on:click="darkMode = !darkMode"
-              :aria-label="`Toggle dark mode ${darkMode ? 'off': 'on'}`"
-              class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-            >
-              <span x-show="darkMode">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
+            <div class="flex gap-4">
+              <div class="relative" x-data="{ showMenu: false }">
+                <button
+                  x-on:click="showMenu = !showMenu"
+                  class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              </span>
+                  <span
+                    class="text-[10px] font-medium"
+                    x-text="selectedRevisionLabel"
+                  ></span>
 
-              <span x-show="!darkMode">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                <div
+                  class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
+                  role="menu"
+                  x-show="showMenu"
+                  x-cloak
+                  x-on:click.away="showMenu = false"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                </svg>
-              </span>
-            </button>
+                  <template x-if="contentRevisions.length">
+                    <ul class="p-2">
+                      <template
+                        x-for="contentRevision in contentRevisions"
+                        :key="contentRevision.key"
+                      >
+                        <li
+                          class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
+                          role="menuitem"
+                        >
+                          <button
+                            x-on:click="useRevision(contentRevision.key, contentRevision.label)"
+                            class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
+                            x-text="contentRevision.label"
+                          ></button>
+
+                          <button
+                            x-on:click="deleteRevision(contentRevision.key)"
+                            class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="w-3 h-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              stroke-width="2"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </li>
+                      </template>
+                    </ul>
+                  </template>
+
+                  <template x-if="! contentRevisions.length">
+                    <div
+                      class="p-4 text-[10px] font-medium dark:text-white text-black text-center"
+                    >
+                      Nothing to see here...
+                    </div>
+                  </template>
+
+                  <div class="p-2 border-t border-[#EAEAEA] dark:border-[#333]">
+                    <button
+                      class="flex items-center gap-2 p-2 text-red-600 transition font-med ium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
+                      x-on:click="deleteRevisions"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-3 h-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+
+                      <span class="text-[10px] font-medium">
+                        Delete Revisions
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                x-on:click="darkMode = !darkMode"
+                aria-label="Toggle dark mode"
+                class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
+              >
+                <span x-show="darkMode">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </span>
+
+                <span x-show="!darkMode">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </div>
 
           <div
@@ -312,7 +411,7 @@
 
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="$storage('contentMarkdown', 'delete')"
+                x-on:click="deleteMarkdown"
                 aria-label="Delete markdown"
               >
                 <svg
@@ -337,6 +436,7 @@
             <textarea
               class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               x-model="contentMarkdown"
+              x-on:input.debounce.1000ms="saveRevision"
               x-ref="textarea"
               placeholder="Enter markdown..."
             >
@@ -400,12 +500,18 @@
       </div>
     </div>
 
-    <script defer>
+    <script>
       document.addEventListener("alpine:init", () => {
         Alpine.data("fakeCms", () => ({
           contentMarkdown: Alpine.$persist("# Hello there..."),
           contentHtml: "",
+          contentRevisions: [],
+          selectedRevisionLabel: "Latest Revision",
           flashNotification: false,
+
+          init() {
+            this.setRevisions();
+          },
 
           modifyMarkdown(syntaxBefore, syntaxAfter) {
             const markdownTextarea = this.$refs.textarea;
@@ -479,6 +585,79 @@
             setTimeout(() => (this.flashNotification = false), 2500);
           },
 
+          deleteMarkdown() {
+            this.refreshComponent();
+          },
+
+          saveRevision() {
+            localStorage.setItem(
+              `_r_${new Date().getTime()}`,
+              `${this.contentMarkdown}`
+            );
+
+            this.setRevisions();
+          },
+
+          deleteRevision(localStorageRevisionKey) {
+            localStorage.removeItem(localStorageRevisionKey);
+
+            this.setRevisions();
+          },
+
+          deleteRevisions() {
+            const localStorageRevisions = Object.keys(localStorage).filter(
+              (localStorageKey) => localStorageKey.includes("_r_")
+            );
+
+            localStorageRevisions.forEach((localStorageRevisionKey) =>
+              localStorage.removeItem(localStorageRevisionKey)
+            );
+
+            this.setRevisions();
+          },
+
+          setRevisions() {
+            let localStorageRevisions = Object.keys(localStorage).filter(
+              (localStorageKey) => localStorageKey.includes("_r_")
+            );
+
+            localStorageRevisions = localStorageRevisions.sort(
+              (firstDate, secondDate) => {
+                const firstDateAsTimestamp = firstDate.replace("_r_", "");
+                const secondDateAsTimestamp = secondDate.replace("_r_", "");
+
+                return (
+                  new Date(Number(secondDateAsTimestamp)) -
+                  new Date(Number(firstDateAsTimestamp))
+                );
+              }
+            );
+
+            this.contentRevisions = localStorageRevisions.map(
+              (localStorageRevisionKey) => {
+                const localStorageRevisionKeyAsTimestamp =
+                  localStorageRevisionKey.replace("_r_", "");
+
+                const formattedDate = new Date(
+                  Number(localStorageRevisionKeyAsTimestamp)
+                ).toLocaleString();
+
+                return {
+                  key: localStorageRevisionKey,
+                  label: formattedDate,
+                };
+              }
+            );
+          },
+
+          useRevision(localStorageRevisionKey, localStorageRevisionLabel) {
+            this.contentMarkdown = localStorage.getItem(
+              localStorageRevisionKey
+            );
+
+            this.selectedRevisionLabel = localStorageRevisionLabel;
+          },
+
           refreshHtml() {
             this.contentHtml = new showdown.Converter({
               noHeaderId: true,
@@ -488,7 +667,7 @@
           },
 
           refreshComponent() {
-            this.contentMarkdown = "";
+            this.contentMarkdown = "# Hello There...";
           },
         }));
       });
