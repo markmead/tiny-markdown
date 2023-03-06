@@ -662,12 +662,9 @@
           },
 
           setRevisions() {
-            let localStorageRevisions = Object.keys(localStorage).filter(
-              (localStorageKey) => localStorageKey.includes('_TM_')
-            )
-
-            localStorageRevisions = localStorageRevisions.sort(
-              (firstDate, secondDate) => {
+            const localStorageRevisions = Object.keys(localStorage)
+              .filter((localStorageKey) => localStorageKey.includes('_TM_'))
+              .sort((firstDate, secondDate) => {
                 const firstDateAsTimestamp = firstDate.replace('_TM_', '')
                 const secondDateAsTimestamp = secondDate.replace('_TM_', '')
 
@@ -675,8 +672,7 @@
                   new Date(Number(secondDateAsTimestamp)) -
                   new Date(Number(firstDateAsTimestamp))
                 )
-              }
-            )
+              })
 
             this.contentRevisions = localStorageRevisions.map(
               (localStorageRevisionKey) => {
