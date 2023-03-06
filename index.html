@@ -80,7 +80,7 @@
               <div class="flex gap-1">
                 <div class="relative" x-data="{ showMenu: false }">
                   <button
-                    x-on:click="showMenu = !showMenu"
+                    @click="showMenu = !showMenu"
                     class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
                   >
                     <span
@@ -107,7 +107,7 @@
                     role="menu"
                     x-show="showMenu"
                     x-cloak
-                    x-on:click.away="showMenu = false"
+                    @click.away="showMenu = false"
                   >
                     <template x-if="contentRevisions.length">
                       <ul class="p-2">
@@ -120,13 +120,13 @@
                             role="menuitem"
                           >
                             <button
-                              x-on:click="useRevision(contentRevision.key, contentRevision.label)"
+                              @click="useRevision(contentRevision.key, contentRevision.label)"
                               class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
                               x-text="contentRevision.label"
                             ></button>
 
                             <button
-                              x-on:click="deleteRevision(contentRevision.key)"
+                              @click="deleteRevision(contentRevision.key)"
                               class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
                             >
                               <svg
@@ -162,7 +162,7 @@
                     >
                       <button
                         class="flex items-center gap-2 p-2 text-red-600 transition font-med ium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
-                        x-on:click="deleteRevisions"
+                        @click="deleteRevisions"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -188,7 +188,7 @@
                 </div>
 
                 <button
-                  x-on:click="saveRevision"
+                  @click="saveRevision"
                   aria-label="Save revision"
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                 >
@@ -211,7 +211,7 @@
 
               <div class="flex gap-1">
                 <button
-                  x-on:click="darkMode = !darkMode"
+                  @click="darkMode = !darkMode"
                   aria-label="Toggle dark mode"
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                 >
@@ -252,7 +252,7 @@
 
                 <div class="hidden lg:block">
                   <button
-                    x-on:click="toggleFullscreen"
+                    @click="toggleFullscreen"
                     aria-label="Toggle full screen mode"
                     class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                   >
@@ -294,7 +294,7 @@
               <div class="flex gap-1">
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('# ')"
+                  @click="modifyMarkdown('# ')"
                   aria-label="Heading one"
                 >
                   H1
@@ -302,7 +302,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('## ')"
+                  @click="modifyMarkdown('## ')"
                   aria-label="Heading two"
                 >
                   H2
@@ -310,7 +310,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('### ')"
+                  @click="modifyMarkdown('### ')"
                   aria-label="Heading three"
                 >
                   H3
@@ -318,7 +318,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('#### ')"
+                  @click="modifyMarkdown('#### ')"
                   aria-label="Heading four"
                 >
                   H4
@@ -328,7 +328,7 @@
               <div class="flex gap-1">
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('**', '**')"
+                  @click="modifyMarkdown('**', '**')"
                   aria-label="Bold text"
                 >
                   B
@@ -336,7 +336,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('_', '_')"
+                  @click="modifyMarkdown('_', '_')"
                   aria-label="Italic text"
                 >
                   I
@@ -344,7 +344,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('~~', '~~')"
+                  @click="modifyMarkdown('~~', '~~')"
                   aria-label="Strikethrough text"
                 >
                   ~
@@ -352,7 +352,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('- ')"
+                  @click="modifyMarkdown('- ')"
                   aria-label="Bullet point"
                 >
                   &bull;
@@ -360,7 +360,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('1. ')"
+                  @click="modifyMarkdown('1. ')"
                   aria-label="Numbered list"
                 >
                   1.
@@ -368,7 +368,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('> ')"
+                  @click="modifyMarkdown('> ')"
                   aria-label="Quote text"
                 >
                   <span class="trangray-y-0.5"> &ldquo;&rdquo; </span>
@@ -378,7 +378,7 @@
               <div class="flex gap-1">
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('`', '`')"
+                  @click="modifyMarkdown('`', '`')"
                   aria-label="Code text"
                 >
                   <svg
@@ -399,7 +399,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('```', '```')"
+                  @click="modifyMarkdown('```', '```')"
                   aria-label="Code block"
                 >
                   <svg
@@ -421,7 +421,7 @@
 
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="modifyMarkdown('![](', ')')"
+                @click="modifyMarkdown('![](', ')')"
                 aria-label="Image"
               >
                 <svg
@@ -444,7 +444,7 @@
             <div class="flex gap-1">
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="copyMarkdown"
+                @click="copyMarkdown"
                 aria-label="Copy markdown"
               >
                 <svg
@@ -465,7 +465,7 @@
 
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="deleteMarkdown"
+                @click="deleteMarkdown"
                 aria-label="Delete markdown"
               >
                 <svg
@@ -490,7 +490,7 @@
             <textarea
               class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               x-model="contentMarkdown"
-              x-on:input.debounce.10000ms="saveRevision"
+              @input.debounce.10000ms="saveRevision"
               x-ref="textarea"
               placeholder="Enter markdown..."
             >
