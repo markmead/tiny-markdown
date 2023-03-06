@@ -13,7 +13,7 @@
 
     <meta
       name="description"
-      content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
+      content="Simple markdown editor in the browser for quick and easy markdown creation."
     />
 
     <link rel="icon" href="https://fav.farm/📝" />
@@ -26,9 +26,9 @@
     />
     <meta
       property="og:description"
-      content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
+      content="Simple markdown editor in the browser for quick and easy markdown creation."
     />
-    <meta property="og:image" content="/src/cover.jpg" />
+    <meta property="og:image" content="/cover.jpg" />
 
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://tiny-markdown.vercel.app/" />
@@ -38,9 +38,9 @@
     />
     <meta
       property="twitter:description"
-      content="Simple markdown editor in the browser built for the developers that are tired of writing markdown in their code editor."
+      content="Simple markdown editor in the browser for quick and easy markdown creation."
     />
-    <meta property="twitter:image" content="/src/cover.jpg" />
+    <meta property="twitter:image" content="/cover.jpg" />
 
     <script
       defer
@@ -52,9 +52,12 @@
       src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
 
-    <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
-
-    <link href="/build/index.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
   </head>
   <body
     x-data="fakeCms"
@@ -74,185 +77,212 @@
             <h1 class="text-lg font-bold dark:text-white">Tiny Markdown</h1>
 
             <div class="flex gap-4">
-              <div class="relative" x-data="{ showMenu: false }">
-                <button
-                  x-on:click="showMenu = !showMenu"
-                  class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
-                >
-                  <span
-                    class="text-[10px] font-medium"
-                    x-text="selectedRevisionLabel"
-                  ></span>
-
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-4 h-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+              <div class="flex gap-1">
+                <div class="relative" x-data="{ showMenu: false }">
+                  <button
+                    @click="showMenu = !showMenu"
+                    class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
                   >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </button>
+                    <span
+                      class="text-[10px] font-medium"
+                      x-text="selectedRevisionLabel"
+                    ></span>
 
-                <div
-                  class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
-                  role="menu"
-                  x-show="showMenu"
-                  x-cloak
-                  x-on:click.away="showMenu = false"
-                >
-                  <template x-if="contentRevisions.length">
-                    <ul class="p-2">
-                      <template
-                        x-for="contentRevision in contentRevisions"
-                        :key="contentRevision.key"
-                      >
-                        <li
-                          class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
-                          role="menuitem"
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <div
+                    class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
+                    role="menu"
+                    x-show="showMenu"
+                    x-cloak
+                    @click.away="showMenu = false"
+                  >
+                    <template x-if="contentRevisions.length">
+                      <ul class="p-2">
+                        <template
+                          x-for="contentRevision in contentRevisions"
+                          :key="contentRevision.key"
                         >
-                          <button
-                            x-on:click="useRevision(contentRevision.key, contentRevision.label)"
-                            class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
-                            x-text="contentRevision.label"
-                          ></button>
-
-                          <button
-                            x-on:click="deleteRevision(contentRevision.key)"
-                            class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
+                          <li
+                            class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
+                            role="menuitem"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              class="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              stroke-width="2"
+                            <button
+                              @click="useRevision(contentRevision.key, contentRevision.label)"
+                              class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
+                              x-text="contentRevision.label"
+                            ></button>
+
+                            <button
+                              @click="deleteRevision(contentRevision.key)"
+                              class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
                             >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </li>
-                      </template>
-                    </ul>
-                  </template>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="w-3 h-3"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </li>
+                        </template>
+                      </ul>
+                    </template>
 
-                  <template x-if="! contentRevisions.length">
-                    <div
-                      class="p-4 text-[10px] font-medium dark:text-white text-black text-center"
-                    >
-                      Nothing to see here...
-                    </div>
-                  </template>
-
-                  <div class="p-2 border-t border-[#EAEAEA] dark:border-[#333]">
-                    <button
-                      class="flex items-center gap-2 p-2 text-red-600 transition font-med ium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
-                      x-on:click="deleteRevisions"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-3 h-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
+                    <template x-if="! contentRevisions.length">
+                      <div
+                        class="p-4 text-[10px] font-medium dark:text-white text-black text-center"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                        Nothing to see here...
+                      </div>
+                    </template>
 
-                      <span class="text-[10px] font-medium">
-                        Delete Revisions
-                      </span>
-                    </button>
+                    <div
+                      class="p-2 border-t border-[#EAEAEA] dark:border-[#333]"
+                    >
+                      <button
+                        class="flex items-center gap-2 p-2 text-red-600 transition font-med ium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
+                        @click="deleteRevisions"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="w-3 h-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+
+                        <span class="text-[10px] font-medium">
+                          Delete Revisions
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <button
-                x-on:click="darkMode = !darkMode"
-                aria-label="Toggle dark mode"
-                class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-              >
-                <span x-show="darkMode">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                </span>
-
-                <span x-show="!darkMode">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                    />
-                  </svg>
-                </span>
-              </button>
-
-              <div class="hidden lg:block">
                 <button
-                  x-on:click="toggleFullscreen"
-                  aria-label="Toggle full screen mode"
+                  @click="saveRevision"
+                  aria-label="Save revision"
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
                 >
-                  <span x-show="isFullscreen">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-3 h-3"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="flex gap-1">
+                <button
+                  @click="darkMode = !darkMode"
+                  aria-label="Toggle dark mode"
+                  class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
+                >
+                  <span x-show="darkMode">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="w-3 h-3"
+                      class="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
                     >
                       <path
-                        d="M3.28 2.22a.75.75 0 00-1.06 1.06L5.44 6.5H2.75a.75.75 0 000 1.5h4.5A.75.75 0 008 7.25v-4.5a.75.75 0 00-1.5 0v2.69L3.28 2.22zM13.5 2.75a.75.75 0 00-1.5 0v4.5c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-2.69l3.22-3.22a.75.75 0 00-1.06-1.06L13.5 5.44V2.75zM3.28 17.78l3.22-3.22v2.69a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 101.06 1.06zM13.5 14.56l3.22 3.22a.75.75 0 101.06-1.06l-3.22-3.22h2.69a.75.75 0 000-1.5h-4.5a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0v-2.69z"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
                       />
                     </svg>
                   </span>
 
-                  <span x-show="!isFullscreen">
+                  <span x-show="!darkMode">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="w-3 h-3"
+                      class="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
                     >
                       <path
-                        d="M13.28 7.78l3.22-3.22v2.69a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 001.06 1.06zM2 17.25v-4.5a.75.75 0 011.5 0v2.69l3.22-3.22a.75.75 0 011.06 1.06L4.56 16.5h2.69a.75.75 0 010 1.5h-4.5a.747.747 0 01-.75-.75zM12.22 13.28l3.22 3.22h-2.69a.75.75 0 000 1.5h4.5a.747.747 0 00.75-.75v-4.5a.75.75 0 00-1.5 0v2.69l-3.22-3.22a.75.75 0 10-1.06 1.06zM3.5 4.56l3.22 3.22a.75.75 0 001.06-1.06L4.56 3.5h2.69a.75.75 0 000-1.5h-4.5a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0V4.56z"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
                       />
                     </svg>
                   </span>
                 </button>
+
+                <div class="hidden lg:block">
+                  <button
+                    @click="toggleFullscreen"
+                    aria-label="Toggle full screen mode"
+                    class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
+                  >
+                    <span x-show="isFullscreen">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        class="w-3 h-3"
+                      >
+                        <path
+                          d="M3.28 2.22a.75.75 0 00-1.06 1.06L5.44 6.5H2.75a.75.75 0 000 1.5h4.5A.75.75 0 008 7.25v-4.5a.75.75 0 00-1.5 0v2.69L3.28 2.22zM13.5 2.75a.75.75 0 00-1.5 0v4.5c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-2.69l3.22-3.22a.75.75 0 00-1.06-1.06L13.5 5.44V2.75zM3.28 17.78l3.22-3.22v2.69a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 101.06 1.06zM13.5 14.56l3.22 3.22a.75.75 0 101.06-1.06l-3.22-3.22h2.69a.75.75 0 000-1.5h-4.5a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0v-2.69z"
+                        />
+                      </svg>
+                    </span>
+
+                    <span x-show="!isFullscreen">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        class="w-3 h-3"
+                      >
+                        <path
+                          d="M13.28 7.78l3.22-3.22v2.69a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 001.06 1.06zM2 17.25v-4.5a.75.75 0 011.5 0v2.69l3.22-3.22a.75.75 0 011.06 1.06L4.56 16.5h2.69a.75.75 0 010 1.5h-4.5a.747.747 0 01-.75-.75zM12.22 13.28l3.22 3.22h-2.69a.75.75 0 000 1.5h4.5a.747.747 0 00.75-.75v-4.5a.75.75 0 00-1.5 0v2.69l-3.22-3.22a.75.75 0 10-1.06 1.06zM3.5 4.56l3.22 3.22a.75.75 0 001.06-1.06L4.56 3.5h2.69a.75.75 0 000-1.5h-4.5a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0V4.56z"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -264,7 +294,7 @@
               <div class="flex gap-1">
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('# ')"
+                  @click="modifyMarkdown('# ')"
                   aria-label="Heading one"
                 >
                   H1
@@ -272,7 +302,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('## ')"
+                  @click="modifyMarkdown('## ')"
                   aria-label="Heading two"
                 >
                   H2
@@ -280,7 +310,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('### ')"
+                  @click="modifyMarkdown('### ')"
                   aria-label="Heading three"
                 >
                   H3
@@ -288,7 +318,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('#### ')"
+                  @click="modifyMarkdown('#### ')"
                   aria-label="Heading four"
                 >
                   H4
@@ -298,7 +328,7 @@
               <div class="flex gap-1">
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('**', '**')"
+                  @click="modifyMarkdown('**', '**')"
                   aria-label="Bold text"
                 >
                   B
@@ -306,7 +336,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('_', '_')"
+                  @click="modifyMarkdown('_', '_')"
                   aria-label="Italic text"
                 >
                   I
@@ -314,7 +344,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('~~', '~~')"
+                  @click="modifyMarkdown('~~', '~~')"
                   aria-label="Strikethrough text"
                 >
                   ~
@@ -322,7 +352,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('- ')"
+                  @click="modifyMarkdown('- ')"
                   aria-label="Bullet point"
                 >
                   &bull;
@@ -330,7 +360,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('1. ')"
+                  @click="modifyMarkdown('1. ')"
                   aria-label="Numbered list"
                 >
                   1.
@@ -338,7 +368,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('> ')"
+                  @click="modifyMarkdown('> ')"
                   aria-label="Quote text"
                 >
                   <span class="trangray-y-0.5"> &ldquo;&rdquo; </span>
@@ -348,7 +378,7 @@
               <div class="flex gap-1">
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('`', '`')"
+                  @click="modifyMarkdown('`', '`')"
                   aria-label="Code text"
                 >
                   <svg
@@ -369,7 +399,7 @@
 
                 <button
                   class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                  x-on:click="modifyMarkdown('```', '```')"
+                  @click="modifyMarkdown('```', '```')"
                   aria-label="Code block"
                 >
                   <svg
@@ -391,7 +421,7 @@
 
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="modifyMarkdown('![](', ')')"
+                @click="modifyMarkdown('![](', ')')"
                 aria-label="Image"
               >
                 <svg
@@ -414,7 +444,7 @@
             <div class="flex gap-1">
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="copyMarkdown"
+                @click="copyMarkdown"
                 aria-label="Copy markdown"
               >
                 <svg
@@ -435,7 +465,7 @@
 
               <button
                 class="border rounded-md w-8 h-8 grid place-content-center text-[10px] dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition font-medium focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset"
-                x-on:click="deleteMarkdown"
+                @click="deleteMarkdown"
                 aria-label="Delete markdown"
               >
                 <svg
@@ -460,7 +490,7 @@
             <textarea
               class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               x-model="contentMarkdown"
-              x-on:input.debounce.1000ms="saveRevision"
+              @input.debounce.10000ms="saveRevision"
               x-ref="textarea"
               placeholder="Enter markdown..."
             >
@@ -473,11 +503,11 @@
             <p> Created with a single HTML file. </p>
 
             <p>
-              Star on
+              View on
               <a
                 href="https://github.com/markmead/tiny-markdown"
                 target="_blank"
-                rel="noopener noreferrer"
+                rel="noreferrer"
                 class="inline-block underline transition focus:outline-none focus:text-pink-500 hover:text-pink-500"
               >
                 GitHub
@@ -606,7 +636,7 @@
 
           saveRevision() {
             localStorage.setItem(
-              `_r_${new Date().getTime()}`,
+              `_TM_${new Date().getTime()}`,
               `${this.contentMarkdown}`
             )
 
@@ -621,7 +651,7 @@
 
           deleteRevisions() {
             const localStorageRevisions = Object.keys(localStorage).filter(
-              (localStorageKey) => localStorageKey.includes('_r_')
+              (localStorageKey) => localStorageKey.includes('_TM_')
             )
 
             localStorageRevisions.forEach((localStorageRevisionKey) =>
@@ -632,26 +662,22 @@
           },
 
           setRevisions() {
-            let localStorageRevisions = Object.keys(localStorage).filter(
-              (localStorageKey) => localStorageKey.includes('_r_')
-            )
-
-            localStorageRevisions = localStorageRevisions.sort(
-              (firstDate, secondDate) => {
-                const firstDateAsTimestamp = firstDate.replace('_r_', '')
-                const secondDateAsTimestamp = secondDate.replace('_r_', '')
+            const localStorageRevisions = Object.keys(localStorage)
+              .filter((localStorageKey) => localStorageKey.includes('_TM_'))
+              .sort((firstDate, secondDate) => {
+                const firstDateAsTimestamp = firstDate.replace('_TM_', '')
+                const secondDateAsTimestamp = secondDate.replace('_TM_', '')
 
                 return (
                   new Date(Number(secondDateAsTimestamp)) -
                   new Date(Number(firstDateAsTimestamp))
                 )
-              }
-            )
+              })
 
             this.contentRevisions = localStorageRevisions.map(
               (localStorageRevisionKey) => {
                 const localStorageRevisionKeyAsTimestamp =
-                  localStorageRevisionKey.replace('_r_', '')
+                  localStorageRevisionKey.replace('_TM_', '')
 
                 const formattedDate = new Date(
                   Number(localStorageRevisionKeyAsTimestamp)
@@ -672,11 +698,7 @@
           },
 
           refreshHtml() {
-            this.contentHtml = new showdown.Converter({
-              noHeaderId: true,
-              strikethrough: true,
-              tables: true,
-            }).makeHtml(this.contentMarkdown)
+            this.contentHtml = marked.parse(this.contentMarkdown)
           },
 
           refreshComponent() {
@@ -689,5 +711,7 @@
         }))
       })
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </body>
 </html>
