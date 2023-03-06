@@ -1,6 +1,5 @@
 # Tiny Markdown
 
-Simple markdown editor in the browser built for the developers that are tired of
-writing markdown in their code editor.
+Simple markdown editor in the browser for quick and easy markdown creation.
 
-![Website](https://tiny-markdown.vercel.app/cover.jpg)
+![](https://tiny-markdown.vercel.app/cover.jpg)
