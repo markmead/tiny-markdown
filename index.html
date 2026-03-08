@@ -96,21 +96,21 @@
                     :class="menuTriggerButtonClass"
                   >
                     <span
-                      class="text-[10px] font-medium"
+                      class="text-xs font-medium"
                       x-text="selectedRevisionLabel"
                     ></span>
 
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      class="w-4 h-4"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
                     >
-                      <path
-                        fill-rule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clip-rule="evenodd"
-                      />
+                      <path d="m6 9 6 6 6-6" />
                     </svg>
                   </button>
 
@@ -138,7 +138,7 @@
                             <button
                               @click="selectRevision(contentRevision.key, contentRevision.label)"
                               role="menuitem"
-                              class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
+                              class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-xs font-medium"
                               x-text="contentRevision.label"
                             ></button>
 
@@ -150,16 +150,22 @@
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="w-3 h-3"
-                                fill="none"
                                 viewBox="0 0 24 24"
+                                fill="none"
                                 stroke="currentColor"
                                 stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="size-4"
                               >
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
                                 <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+                                />
+                                <path d="M3 6h18" />
+                                <path
+                                  d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
                                 />
                               </svg>
                             </button>
@@ -170,7 +176,7 @@
 
                     <template x-if="! contentRevisions.length">
                       <div
-                        class="p-4 text-[10px] font-medium dark:text-white text-black text-center"
+                        class="p-4 text-xs font-medium dark:text-white text-black text-center"
                       >
                         Nothing to see here...
                       </div>
@@ -187,20 +193,22 @@
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          class="w-3 h-3"
-                          fill="none"
                           viewBox="0 0 24 24"
+                          fill="none"
                           stroke="currentColor"
                           stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="size-4"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
 
-                        <span class="text-[10px] font-medium">
+                        <span class="text-xs font-medium">
                           Delete Revisions
                         </span>
                       </button>
@@ -215,16 +223,16 @@
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
                     viewBox="0 0 24 24"
-                    stroke-width="1.5"
+                    fill="none"
                     stroke="currentColor"
-                    class="w-3 h-3"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
                   >
                     <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"
+                      d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"
                     />
                   </svg>
                 </button>
@@ -236,39 +244,45 @@
                   aria-label="Toggle dark mode"
                   :class="toolbarButtonClass"
                 >
-                  <span x-show="darkMode">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                  </span>
+                  <svg
+                    x-cloak
+                    x-show="darkMode"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="m6.34 17.66-1.41 1.41" />
+                    <path d="m19.07 4.93-1.41 1.41" />
+                  </svg>
 
-                  <span x-show="!darkMode">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                      />
-                    </svg>
-                  </span>
+                  <svg
+                    x-cloak
+                    x-show="!darkMode"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path
+                      d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
+                    />
+                  </svg>
                 </button>
 
                 <div class="hidden lg:block">
@@ -277,31 +291,45 @@
                     aria-label="Toggle full screen mode"
                     :class="toolbarButtonClass"
                   >
-                    <span x-show="isFullscreen">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        class="w-3 h-3"
-                      >
-                        <path
-                          d="M3.28 2.22a.75.75 0 00-1.06 1.06L5.44 6.5H2.75a.75.75 0 000 1.5h4.5A.75.75 0 008 7.25v-4.5a.75.75 0 00-1.5 0v2.69L3.28 2.22zM13.5 2.75a.75.75 0 00-1.5 0v4.5c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-2.69l3.22-3.22a.75.75 0 00-1.06-1.06L13.5 5.44V2.75zM3.28 17.78l3.22-3.22v2.69a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 101.06 1.06zM13.5 14.56l3.22 3.22a.75.75 0 101.06-1.06l-3.22-3.22h2.69a.75.75 0 000-1.5h-4.5a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0v-2.69z"
-                        />
-                      </svg>
-                    </span>
+                    <svg
+                      x-cloak
+                      x-show="isFullscreen"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                    >
+                      <path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8" />
+                      <path d="M9 19.8V15m0 0H4.2M9 15l-6 6" />
+                      <path d="M15 4.2V9m0 0h4.8M15 9l6-6" />
+                      <path d="M9 4.2V9m0 0H4.2M9 9 3 3" />
+                    </svg>
 
-                    <span x-show="!isFullscreen">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        class="w-3 h-3"
-                      >
-                        <path
-                          d="M13.28 7.78l3.22-3.22v2.69a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.69l-3.22 3.22a.75.75 0 001.06 1.06zM2 17.25v-4.5a.75.75 0 011.5 0v2.69l3.22-3.22a.75.75 0 011.06 1.06L4.56 16.5h2.69a.75.75 0 010 1.5h-4.5a.747.747 0 01-.75-.75zM12.22 13.28l3.22 3.22h-2.69a.75.75 0 000 1.5h4.5a.747.747 0 00.75-.75v-4.5a.75.75 0 00-1.5 0v2.69l-3.22-3.22a.75.75 0 10-1.06 1.06zM3.5 4.56l3.22 3.22a.75.75 0 001.06-1.06L4.56 3.5h2.69a.75.75 0 000-1.5h-4.5a.75.75 0 00-.75.75v4.5a.75.75 0 001.5 0V4.56z"
-                        />
-                      </svg>
-                    </span>
+                    <svg
+                      x-cloak
+                      x-show="!isFullscreen"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                    >
+                      <path d="m15 15 6 6" />
+                      <path d="m15 9 6-6" />
+                      <path d="M21 16v5h-5" />
+                      <path d="M21 8V3h-5" />
+                      <path d="M3 16v5h5" />
+                      <path d="m3 21 6-6" />
+                      <path d="M3 8V3h5" />
+                      <path d="M9 9 3 3" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -318,7 +346,21 @@
                   @click="modifyMarkdown('# ')"
                   aria-label="Heading one"
                 >
-                  H1
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M4 12h8" />
+                    <path d="M4 18V6" />
+                    <path d="M12 18V6" />
+                    <path d="m17 12 3-2v8" />
+                  </svg>
                 </button>
 
                 <button
@@ -326,7 +368,21 @@
                   @click="modifyMarkdown('## ')"
                   aria-label="Heading two"
                 >
-                  H2
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M4 12h8" />
+                    <path d="M4 18V6" />
+                    <path d="M12 18V6" />
+                    <path d="M21 18h-4c0-4 4-3 4-6 0-1.5-2-2.5-4-1" />
+                  </svg>
                 </button>
 
                 <button
@@ -334,7 +390,22 @@
                   @click="modifyMarkdown('### ')"
                   aria-label="Heading three"
                 >
-                  H3
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M4 12h8" />
+                    <path d="M4 18V6" />
+                    <path d="M12 18V6" />
+                    <path d="M17.5 10.5c1.7-1 3.5 0 3.5 1.5a2 2 0 0 1-2 2" />
+                    <path d="M17 17.5c2 1.5 4 .3 4-1.5a2 2 0 0 0-2-2" />
+                  </svg>
                 </button>
 
                 <button
@@ -342,7 +413,22 @@
                   @click="modifyMarkdown('#### ')"
                   aria-label="Heading four"
                 >
-                  H4
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M12 18V6" />
+                    <path d="M17 10v3a1 1 0 0 0 1 1h3" />
+                    <path d="M21 10v8" />
+                    <path d="M4 12h8" />
+                    <path d="M4 18V6" />
+                  </svg>
                 </button>
               </div>
 
@@ -352,7 +438,20 @@
                   @click="modifyMarkdown('**', '**')"
                   aria-label="Bold text"
                 >
-                  B
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path
+                      d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"
+                    />
+                  </svg>
                 </button>
 
                 <button
@@ -360,7 +459,20 @@
                   @click="modifyMarkdown('_', '_')"
                   aria-label="Italic text"
                 >
-                  I
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <line x1="19" x2="10" y1="4" y2="4" />
+                    <line x1="14" x2="5" y1="20" y2="20" />
+                    <line x1="15" x2="9" y1="4" y2="20" />
+                  </svg>
                 </button>
 
                 <button
@@ -368,7 +480,20 @@
                   @click="modifyMarkdown('~~', '~~')"
                   aria-label="Strikethrough text"
                 >
-                  ~
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M16 4H9a3 3 0 0 0-2.83 4" />
+                    <path d="M14 12a4 4 0 0 1 0 8H6" />
+                    <line x1="4" x2="20" y1="12" y2="12" />
+                  </svg>
                 </button>
 
                 <button
@@ -376,7 +501,25 @@
                   @click="modifyMarkdown('- ')"
                   aria-label="Bullet point"
                 >
-                  &bull;
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M11 5h10" />
+                    <path d="M11 12h10" />
+                    <path d="M11 19h10" />
+                    <path d="M4 4h1v5" />
+                    <path d="M4 9h2" />
+                    <path
+                      d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"
+                    />
+                  </svg>
                 </button>
 
                 <button
@@ -384,7 +527,25 @@
                   @click="modifyMarkdown('1. ')"
                   aria-label="Numbered list"
                 >
-                  1.
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="M11 5h10" />
+                    <path d="M11 12h10" />
+                    <path d="M11 19h10" />
+                    <path d="M4 4h1v5" />
+                    <path d="M4 9h2" />
+                    <path
+                      d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"
+                    />
+                  </svg>
                 </button>
 
                 <button
@@ -392,7 +553,19 @@
                   @click="modifyMarkdown('> ')"
                   aria-label="Quote text"
                 >
-                  <span> &ldquo;&rdquo; </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <path d="m16 18 6-6-6-6" />
+                    <path d="m8 6-6 6 6 6" />
+                  </svg>
                 </button>
               </div>
 
@@ -404,17 +577,16 @@
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="w-3 h-3"
-                    fill="none"
                     viewBox="0 0 24 24"
+                    fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                    />
+                    <path d="m16 18 6-6-6-6" />
+                    <path d="m8 6-6 6 6 6" />
                   </svg>
                 </button>
 
@@ -425,17 +597,16 @@
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="w-3 h-3"
-                    fill="none"
                     viewBox="0 0 24 24"
+                    fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="m10 8 4 4-4 4" />
                   </svg>
                 </button>
 
@@ -446,17 +617,17 @@
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="w-3 h-3"
-                    fill="none"
                     viewBox="0 0 24 24"
+                    fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
+                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                    <circle cx="9" cy="9" r="2" />
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                   </svg>
                 </button>
               </div>
@@ -470,16 +641,17 @@
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="w-3 h-3"
-                  fill="none"
                   viewBox="0 0 24 24"
+                  fill="none"
                   stroke="currentColor"
                   stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
                 >
+                  <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
                   <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
                   />
                 </svg>
               </button>
@@ -491,17 +663,19 @@
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="w-3 h-3"
-                  fill="none"
                   viewBox="0 0 24 24"
+                  fill="none"
                   stroke="currentColor"
                   stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </button>
             </div>
@@ -616,7 +790,7 @@
           toolbarGroupClass:
             'flex items-center gap-1 p-1 border rounded-lg border-[#EAEAEA] bg-white dark:border-[#333] dark:bg-black',
           toolbarButtonClass:
-            'w-8 h-8 rounded-md grid place-content-center text-[10px] font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
+            'w-8 h-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
           menuTriggerButtonClass:
             'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
           selectedRevisionLabel: 'Latest Revision',
