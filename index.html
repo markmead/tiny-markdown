@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html
   lang="en"
   x-data="{ darkMode: $persist(window.matchMedia('(prefers-color-scheme: dark)').matches) }"
@@ -44,13 +44,15 @@
 
     <script
       defer
-      src="https://unpkg.com/@alpinejs/persist@3.x.x/dist/cdn.min.js"
+      src="https://unpkg.com/@alpinejs/persist@latest/dist/cdn.min.js"
     ></script>
 
     <script
       defer
-      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+      src="https://unpkg.com/alpinejs@latest/dist/cdn.min.js"
     ></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
@@ -371,7 +373,7 @@
                   @click="modifyMarkdown('> ')"
                   aria-label="Quote text"
                 >
-                  <span class="trangray-y-0.5"> &ldquo;&rdquo; </span>
+                  <span> &ldquo;&rdquo; </span>
                 </button>
               </div>
 
@@ -490,6 +492,7 @@
             <textarea
               class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               x-model="contentMarkdown"
+              @input="validateMarkdownSize"
               @input.debounce.10000ms="saveRevision"
               x-ref="textarea"
               placeholder="Enter markdown..."
@@ -539,12 +542,16 @@
         x-show="flashNotification"
         role="alert"
         class="dark:bg-black p-4 border dark:border-[#333] rounded-lg dark:text-white text-sm font-medium bg-white border-[#EAEAEA]"
-      >
-        Copied to Clipboard! 🎉
-      </div>
+        x-text="notificationText"
+      ></div>
     </div>
 
     <script>
+      const REVISION_PREFIX = '_TM_'
+      const FLASH_NOTIFICATION_DURATION = 2500
+      const AUTO_SAVE_DEBOUNCE = 10000
+      const MAX_MARKDOWN_SIZE = 50000 // 50KB
+
       document.addEventListener('alpine:init', () => {
         Alpine.data('fakeCms', () => ({
           contentMarkdown: Alpine.$persist('# Hello there...'),
@@ -552,6 +559,7 @@
           contentRevisions: [],
           selectedRevisionLabel: 'Latest Revision',
           flashNotification: false,
+          notificationText: '',
           isFullscreen: Alpine.$persist(false),
 
           init() {
@@ -566,12 +574,12 @@
 
             const markdownSelectedText = markdownTextarea.value.slice(
               markdownTextStart,
-              markdownTextEnd
+              markdownTextEnd,
             )
 
             const markdownTextBeforeSelection = markdownTextarea.value.slice(
               0,
-              markdownTextStart
+              markdownTextStart,
             )
 
             const markdownTextAfterSelection =
@@ -583,14 +591,14 @@
                   markdownTextAfterSelection,
                   markdownSelectedText,
                   syntaxBefore,
-                  syntaxAfter
+                  syntaxAfter,
                 )
               : this.modifyMarkdownAdd(
                   markdownTextBeforeSelection,
                   markdownTextAfterSelection,
                   markdownSelectedText,
                   syntaxBefore,
-                  syntaxAfter
+                  syntaxAfter,
                 )
 
             markdownTextarea.focus()
@@ -601,7 +609,7 @@
             textAfterSelection,
             selectedText,
             syntaxBefore,
-            syntaxAfter = ''
+            syntaxAfter = '',
           ) {
             return syntaxBefore === '```'
               ? `${textBeforeSelection}${syntaxBefore}\n${selectedText}\n${syntaxAfter}${textAfterSelection}`
@@ -613,7 +621,7 @@
             textAfterSelection,
             selectedText,
             syntaxBefore,
-            syntaxAfter = ''
+            syntaxAfter = '',
           ) {
             const updatedSelectedMarkdown = selectedText
               .replace(syntaxBefore, '')
@@ -624,20 +632,28 @@
 
           copyMarkdown() {
             navigator.clipboard.writeText(this.contentMarkdown)
-
-            this.flashNotification = true
-
-            setTimeout(() => (this.flashNotification = false), 2500)
+            this.showNotification('Copied to Clipboard! 🎉')
           },
 
           deleteMarkdown() {
             this.refreshComponent()
           },
 
+          validateMarkdownSize() {
+            if (this.contentMarkdown.length > MAX_MARKDOWN_SIZE) {
+              this.contentMarkdown = this.contentMarkdown.substring(
+                0,
+                MAX_MARKDOWN_SIZE,
+              )
+
+              this.showNotification('❌ Content limited to 50KB')
+            }
+          },
+
           saveRevision() {
             localStorage.setItem(
-              `_TM_${new Date().getTime()}`,
-              `${this.contentMarkdown}`
+              `${REVISION_PREFIX}${new Date().getTime()}`,
+              `${this.contentMarkdown}`,
             )
 
             this.setRevisions()
@@ -651,11 +667,11 @@
 
           deleteRevisions() {
             const localStorageRevisions = Object.keys(localStorage).filter(
-              (localStorageKey) => localStorageKey.includes('_TM_')
+              (localStorageKey) => localStorageKey.includes(REVISION_PREFIX),
             )
 
             localStorageRevisions.forEach((localStorageRevisionKey) =>
-              localStorage.removeItem(localStorageRevisionKey)
+              localStorage.removeItem(localStorageRevisionKey),
             )
 
             this.setRevisions()
@@ -663,10 +679,19 @@
 
           setRevisions() {
             const localStorageRevisions = Object.keys(localStorage)
-              .filter((localStorageKey) => localStorageKey.includes('_TM_'))
+              .filter((localStorageKey) =>
+                localStorageKey.includes(REVISION_PREFIX),
+              )
               .sort((firstDate, secondDate) => {
-                const firstDateAsTimestamp = firstDate.replace('_TM_', '')
-                const secondDateAsTimestamp = secondDate.replace('_TM_', '')
+                const firstDateAsTimestamp = firstDate.replace(
+                  REVISION_PREFIX,
+                  '',
+                )
+
+                const secondDateAsTimestamp = secondDate.replace(
+                  REVISION_PREFIX,
+                  '',
+                )
 
                 return (
                   new Date(Number(secondDateAsTimestamp)) -
@@ -677,17 +702,17 @@
             this.contentRevisions = localStorageRevisions.map(
               (localStorageRevisionKey) => {
                 const localStorageRevisionKeyAsTimestamp =
-                  localStorageRevisionKey.replace('_TM_', '')
+                  localStorageRevisionKey.replace(REVISION_PREFIX, '')
 
                 const formattedDate = new Date(
-                  Number(localStorageRevisionKeyAsTimestamp)
+                  Number(localStorageRevisionKeyAsTimestamp),
                 ).toLocaleString()
 
                 return {
                   key: localStorageRevisionKey,
                   label: formattedDate,
                 }
-              }
+              },
             )
           },
 
@@ -698,7 +723,27 @@
           },
 
           refreshHtml() {
-            this.contentHtml = marked.parse(this.contentMarkdown)
+            try {
+              const rawHtml = marked.parse(this.contentMarkdown)
+
+              this.contentHtml = DOMPurify.sanitize(rawHtml)
+            } catch {
+              this.showNotification(
+                '⚠️ Markdown parsing error - preview unavailable',
+              )
+
+              this.contentHtml = `<p>${DOMPurify.sanitize(this.contentMarkdown)}</p>`
+            }
+          },
+
+          showNotification(textContent) {
+            this.notificationText = textContent
+            this.flashNotification = true
+
+            setTimeout(
+              () => (this.flashNotification = false),
+              FLASH_NOTIFICATION_DURATION,
+            )
           },
 
           refreshComponent() {
