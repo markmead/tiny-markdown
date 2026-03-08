@@ -636,6 +636,30 @@
             <div :class="toolbarGroupClass">
               <button
                 :class="toolbarButtonClass"
+                @click="exportMarkdownDocument"
+                aria-label="Export markdown"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
+                >
+                  <path
+                    d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                  />
+                  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                  <path d="M12 18v-6" />
+                  <path d="m9 15 3 3 3-3" />
+                </svg>
+              </button>
+
+              <button
+                :class="toolbarButtonClass"
                 @click="copyMarkdown"
                 aria-label="Copy markdown"
               >
@@ -754,6 +778,7 @@
       const FLASH_NOTIFICATION_DURATION = 2500
       const MAX_MARKDOWN_SIZE = 50000 // 50KB
       const DEFAULT_REVISION_LABEL = 'Latest Revision'
+      const DEFAULT_REVISION_KEY = null
 
       const revisionStore = {
         saveEntry(markdownContent) {
@@ -877,6 +902,35 @@
         },
       }
 
+      const exportService = {
+        createFileName(fileExtension) {
+          const exportTimestamp = Date.now()
+
+          return `tiny-markdown-${exportTimestamp}.${fileExtension}`
+        },
+
+        downloadFile(fileContent, fileName, fileType) {
+          const exportBlob = new Blob([fileContent], { type: fileType })
+          const exportUrl = URL.createObjectURL(exportBlob)
+          const exportLink = document.createElement('a')
+
+          exportLink.href = exportUrl
+          exportLink.download = fileName
+
+          exportLink.click()
+
+          URL.revokeObjectURL(exportUrl)
+        },
+
+        exportMarkdown(markdownContent) {
+          this.downloadFile(
+            markdownContent,
+            this.createFileName('md'),
+            'text/markdown;charset=utf-8',
+          )
+        },
+      }
+
       document.addEventListener('alpine:init', () => {
         /**
          * Main Alpine.js component for TinyMarkdown editor
@@ -917,6 +971,7 @@
             'size-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
           menuTriggerButtonClass:
             'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
+          selectedRevisionKey: DEFAULT_REVISION_KEY,
           selectedRevisionLabel: DEFAULT_REVISION_LABEL,
           flashNotification: false,
           notificationText: '',
@@ -927,7 +982,7 @@
            * Initializes component state
            * @description Loads persisted revisions into the revision dropdown on startup.
            */
-          initializeComponent() {
+          init() {
             this.setRevisions()
           },
 
@@ -1131,7 +1186,11 @@
            */
           deleteRevision(localStorageRevisionKey) {
             revisionStore.removeEntry(localStorageRevisionKey)
-            this.selectedRevisionLabel = DEFAULT_REVISION_LABEL
+
+            if (this.selectedRevisionKey === localStorageRevisionKey) {
+              this.selectedRevisionKey = DEFAULT_REVISION_KEY
+              this.selectedRevisionLabel = DEFAULT_REVISION_LABEL
+            }
 
             this.setRevisions()
           },
@@ -1142,6 +1201,8 @@
            */
           deleteRevisions() {
             revisionStore.removeAllEntries()
+
+            this.selectedRevisionKey = DEFAULT_REVISION_KEY
             this.selectedRevisionLabel = DEFAULT_REVISION_LABEL
 
             this.setRevisions()
@@ -1156,6 +1217,16 @@
            */
           setRevisions() {
             this.contentRevisions = revisionStore.listEntries()
+
+            const selectedRevisionExists = this.contentRevisions.some(
+              (contentRevision) =>
+                contentRevision.revisionKey === this.selectedRevisionKey,
+            )
+
+            if (!selectedRevisionExists) {
+              this.selectedRevisionKey = DEFAULT_REVISION_KEY
+              this.selectedRevisionLabel = DEFAULT_REVISION_LABEL
+            }
           },
 
           /**
@@ -1169,7 +1240,18 @@
               localStorageRevisionKey,
             )
 
+            this.selectedRevisionKey = localStorageRevisionKey
             this.selectedRevisionLabel = localStorageRevisionLabel
+          },
+
+          /**
+           * Exports current markdown content as a .md file
+           * @description Creates a timestamped markdown file download in the browser.
+           */
+          exportMarkdownDocument() {
+            exportService.exportMarkdown(this.contentMarkdown)
+
+            this.showNotification('🎉 Exported as markdown')
           },
 
           /**
