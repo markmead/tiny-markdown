@@ -553,6 +553,27 @@
       const MAX_MARKDOWN_SIZE = 50000 // 50KB
 
       document.addEventListener('alpine:init', () => {
+        /**
+         * Main Alpine.js component for TinyMarkdown editor
+         * @description
+         * Real-time markdown editor with live preview, secure sanitization, revision history,
+         * and persistent preferences. Manages all editor state and user interactions.
+         *
+         * Features:
+         * - Live HTML preview with XSS protection (DOMPurify sanitization)
+         * - Revision history saved to localStorage with timestamps
+         * - Dark mode toggle with persistent user preference
+         * - Toolbar with markdown formatting shortcuts
+         * - 50KB size limit for optimal performance
+         *
+         * Data Properties:
+         * - contentMarkdown: Current markdown text (persisted to browser storage)
+         * - contentHtml: Rendered HTML preview (sanitized for security)
+         * - contentRevisions: Array of timestamped revision objects
+         * - flashNotification: Boolean toggle for notification display
+         * - notificationText: Dynamic message content with emoji indicators
+         * - isFullscreen: Boolean toggle to hide preview pane for full-width editing
+         */
         Alpine.data('fakeCms', () => ({
           contentMarkdown: Alpine.$persist('# Hello there...'),
           contentHtml: '',
@@ -566,6 +587,15 @@
             this.setRevisions()
           },
 
+          /**
+           * Wraps or unwraps selected text with markdown syntax markers
+           * @param {string} syntaxBefore - Opening syntax marker (e.g., '**' for bold)
+           * @param {string} syntaxAfter - Closing syntax marker (e.g., '**' for bold)
+           * @description
+           * Intelligently toggles formatting - removes syntax if already applied,
+           * adds if not. Special handling for code blocks (adds newlines).
+           * Returns focus to textarea after modification.
+           */
           modifyMarkdown(syntaxBefore, syntaxAfter) {
             const markdownTextarea = this.$refs.textarea
 
@@ -604,6 +634,16 @@
             markdownTextarea.focus()
           },
 
+          /**
+           * Adds syntax markers around selected text
+           * @param {string} textBeforeSelection - Markdown content before selection
+           * @param {string} textAfterSelection - Markdown content after selection
+           * @param {string} selectedText - Currently selected text to wrap
+           * @param {string} syntaxBefore - Opening syntax marker to apply
+           * @param {string} syntaxAfter - Closing syntax marker (optional)
+           * @returns {string} Modified markdown with syntax applied
+           * @description Special handling for code blocks (```) adds newlines for readability.
+           */
           modifyMarkdownAdd(
             textBeforeSelection,
             textAfterSelection,
@@ -616,6 +656,16 @@
               : `${textBeforeSelection}${syntaxBefore}${selectedText}${syntaxAfter}${textAfterSelection}`
           },
 
+          /**
+           * Removes syntax markers from selected text
+           * @param {string} textBeforeSelection - Markdown content before selection
+           * @param {string} textAfterSelection - Markdown content after selection
+           * @param {string} selectedText - Currently selected text to unwrap
+           * @param {string} syntaxBefore - Opening syntax marker to remove
+           * @param {string} syntaxAfter - Closing syntax marker to remove (optional)
+           * @returns {string} Modified markdown with syntax removed
+           * @description Removes first occurrence of each marker from selection.
+           */
           modifyMarkdownRemove(
             textBeforeSelection,
             textAfterSelection,
@@ -630,15 +680,31 @@
             return `${textBeforeSelection}${updatedSelectedMarkdown}${textAfterSelection}`
           },
 
+          /**
+           * Copies current markdown content to clipboard
+           * @description Shows success notification after copy.
+           */
           copyMarkdown() {
             navigator.clipboard.writeText(this.contentMarkdown)
-            this.showNotification('Copied to Clipboard! 🎉')
+
+            this.showNotification('🎉 Copied to clipboard!')
           },
 
+          /**
+           * Clears markdown editor content
+           * @description Resets editor to default greeting message.
+           */
           deleteMarkdown() {
             this.refreshComponent()
           },
 
+          /**
+           * Validates markdown content doesn't exceed 50KB size limit
+           * @description
+           * Truncates content in real-time if limit is exceeded.
+           * Called on every input change for immediate feedback.
+           * Shows notification when limit is reached.
+           */
           validateMarkdownSize() {
             if (this.contentMarkdown.length > MAX_MARKDOWN_SIZE) {
               this.contentMarkdown = this.contentMarkdown.substring(
@@ -650,6 +716,12 @@
             }
           },
 
+          /**
+           * Saves current markdown as a timestamped revision to localStorage
+           * @description
+           * Stores with key pattern _TM_{timestamp}. Auto-triggered after 10s of inactivity
+           * (debounced) and manually via Save Revision button. Updates revision list after save.
+           */
           saveRevision() {
             localStorage.setItem(
               `${REVISION_PREFIX}${new Date().getTime()}`,
@@ -659,12 +731,21 @@
             this.setRevisions()
           },
 
+          /**
+           * Deletes a single revision from localStorage
+           * @param {string} localStorageRevisionKey - The localStorage key of revision to delete
+           * @description Updates revision list after deletion.
+           */
           deleteRevision(localStorageRevisionKey) {
             localStorage.removeItem(localStorageRevisionKey)
 
             this.setRevisions()
           },
 
+          /**
+           * Deletes all revisions from localStorage
+           * @description Clears entire revision history. Updates revision list after deletion.
+           */
           deleteRevisions() {
             const localStorageRevisions = Object.keys(localStorage).filter(
               (localStorageKey) => localStorageKey.includes(REVISION_PREFIX),
@@ -677,6 +758,13 @@
             this.setRevisions()
           },
 
+          /**
+           * Loads and displays all timestamped revisions from localStorage
+           * @description
+           * Queries localStorage for all _TM_* keys, sorts by timestamp (newest first),
+           * formats timestamps to locale strings, and updates revision array for rendering.
+           * Called after save/delete operations to refresh revision menu.
+           */
           setRevisions() {
             const localStorageRevisions = Object.keys(localStorage)
               .filter((localStorageKey) =>
@@ -716,12 +804,25 @@
             )
           },
 
+          /**
+           * Loads a previous revision into the editor
+           * @param {string} localStorageRevisionKey - The localStorage key of revision to load
+           * @param {string} localStorageRevisionLabel - Display label for the revision (formatted date)
+           * @description Replaces current content with selected revision and updates UI label.
+           */
           useRevision(localStorageRevisionKey, localStorageRevisionLabel) {
             this.contentMarkdown = localStorage.getItem(localStorageRevisionKey)
 
             this.selectedRevisionLabel = localStorageRevisionLabel
           },
 
+          /**
+           * Parses markdown to HTML and sanitizes for secure display
+           * @description
+           * Uses marked.js to convert markdown to HTML and sanitizes output with DOMPurify
+           * to prevent XSS attacks. Shows error notification if parsing fails, falls back to
+           * plain-text display. Called reactively whenever contentMarkdown changes.
+           */
           refreshHtml() {
             try {
               const rawHtml = marked.parse(this.contentMarkdown)
@@ -736,6 +837,13 @@
             }
           },
 
+          /**
+           * Displays a temporary notification message to the user
+           * @param {string} textContent - Message text to display (supports emojis)
+           * @description
+           * Shows notification for 2.5 seconds then auto-hides. Used for success (🎉),
+           * errors (❌), and warnings (⚠️). Single notification at a time (replaces previous).
+           */
           showNotification(textContent) {
             this.notificationText = textContent
             this.flashNotification = true
@@ -746,10 +854,18 @@
             )
           },
 
+          /**
+           * Resets editor to initial state
+           * @description Sets markdown to default greeting message.
+           */
           refreshComponent() {
             this.contentMarkdown = '# Hello There...'
           },
 
+          /**
+           * Toggles between full-width and split-pane layout
+           * @description Hides preview pane when fullscreen is enabled for distraction-free editing.
+           */
           toggleFullscreen() {
             this.isFullscreen = !this.isFullscreen
           },

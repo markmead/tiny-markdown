@@ -86,25 +86,38 @@ with focus on:
 
 ### 2.1 Code Refactoring
 
-**Status:** � IN PROGRESS
+**Status:** 🟡 PARTIALLY COMPLETED
 
 - [x] Extract magic strings to constants (COMPLETED)
-- [ ] Create configuration object for settings
-- [ ] Separate concerns: UI logic, storage logic, markdown logic
 - [x] Fix CSS typo (COMPLETED)
+- [ ] Separate concerns: organize UI logic, storage logic, markdown logic (TODO)
 - **Impact:** Improved maintainability and readability
-- **Estimated Effort:** 3 hours
+- **Actual Effort:** 1.5 hours (constants & CSS)
+- **Remaining:** 1 hour (concerns separation)
 
 ### 2.2 Code Documentation
 
-**Status:** ⏳ IN PROGRESS
+**Status:** ✅ COMPLETED
 
-- [ ] Add JSDoc comments to complex functions
-- [ ] Document Alpine component structure
-- [ ] Add inline comments for non-obvious logic (modifyMarkdown)
+- [x] Add JSDoc comments to complex functions
+- [x] Document Alpine component structure
+- [x] Standardize JSDoc style across all functions
+- [x] Add inline comments for non-obvious logic
 - **Impact:** Easier onboarding and refactoring
-- **Estimated Effort:** 2 hours
-- **Priority:** HIGH - Start here
+- **Actual Effort:** 1.5 hours
+- **Documented Functions (14 total):**
+  - Component-level: Main `fakeCms` - Alpine data structure, features overview
+  - Selection/Syntax: `modifyMarkdown()`, `modifyMarkdownAdd()`,
+    `modifyMarkdownRemove()`
+  - Validation: `validateMarkdownSize()` - Real-time 50KB enforcement
+  - Storage: `saveRevision()`, `setRevisions()`, `useRevision()`
+  - Deletion: `deleteRevision()`, `deleteRevisions()`
+  - Rendering: `refreshHtml()` - Markdown parsing with XSS sanitization
+  - Notifications: `showNotification()` - Toast with emoji support
+  - Actions: `copyMarkdown()`, `deleteMarkdown()`, `refreshComponent()`,
+    `toggleFullscreen()`
+- **Style:** Consistent JSDoc format with @param, @returns, @description
+  sections
 
 ### 2.3 Error Handling Enhancement
 
