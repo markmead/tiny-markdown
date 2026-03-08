@@ -80,22 +80,14 @@
 
             <div class="flex gap-4">
               <div class="flex gap-1">
-                <div class="relative" x-data="{ showMenu: false }">
+                <div class="relative">
                   <button
-                    @click="
-                      showMenu = !showMenu;
-                      if (showMenu && contentRevisions.length) {
-                        $nextTick(() => $refs.revisionMenu?.querySelector('[data-revision-select]')?.focus())
-                      }
-                    "
-                    @keydown.escape.prevent="
-                      showMenu = false;
-                      $refs.revisionMenuTrigger.focus()
-                    "
+                    @click="toggleRevisionMenu"
+                    @keydown.escape.prevent="closeRevisionMenu"
                     x-ref="revisionMenuTrigger"
                     id="revision-menu-button"
                     aria-haspopup="menu"
-                    :aria-expanded="showMenu"
+                    :aria-expanded="showRevisionMenu"
                     aria-controls="revision-menu"
                     aria-label="Open revision history"
                     class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
@@ -124,36 +116,34 @@
                     x-ref="revisionMenu"
                     class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
                     role="menu"
-                    x-show="showMenu"
+                    aria-labelledby="revision-menu-button"
+                    x-show="showRevisionMenu"
                     x-cloak
-                    @click.away="
-                      showMenu = false;
-                      $refs.revisionMenuTrigger.focus()
-                    "
-                    @keydown.escape.prevent="
-                      showMenu = false;
-                      $refs.revisionMenuTrigger.focus()
-                    "
+                    @click.away="closeRevisionMenu"
+                    @keydown.escape.prevent="closeRevisionMenu"
                   >
                     <template x-if="contentRevisions.length">
-                      <ul class="p-2">
+                      <ul class="p-2" role="none">
                         <template
                           x-for="contentRevision in contentRevisions"
                           :key="contentRevision.key"
                         >
                           <li
                             class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
-                            role="menuitem"
+                            role="none"
                           >
                             <button
-                              @click="useRevision(contentRevision.key, contentRevision.label)"
-                              data-revision-select
+                              @click="selectRevision(contentRevision.key, contentRevision.label)"
+                              role="menuitem"
+                              data-menu-item
                               class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
                               x-text="contentRevision.label"
                             ></button>
 
                             <button
-                              @click="deleteRevision(contentRevision.key)"
+                              @click="removeRevision(contentRevision.key)"
+                              role="menuitem"
+                              data-menu-item
                               aria-label="Delete revision"
                               class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
                             >
@@ -190,7 +180,9 @@
                     >
                       <button
                         class="flex items-center gap-2 p-2 text-red-600 transition font-medium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
-                        @click="deleteRevisions"
+                        @click="removeAllRevisions"
+                        role="menuitem"
+                        data-menu-item
                         aria-label="Delete all revisions"
                       >
                         <svg
@@ -609,6 +601,7 @@
          * - flashNotification: Boolean toggle for notification display
          * - notificationText: Dynamic message content with emoji indicators
          * - isFullscreen: Boolean toggle to hide preview pane for full-width editing
+         * - showRevisionMenu: Boolean toggle for revision menu visibility
          */
         Alpine.data('fakeCms', () => ({
           contentMarkdown: Alpine.$persist('# Hello there...'),
@@ -618,9 +611,75 @@
           flashNotification: false,
           notificationText: '',
           isFullscreen: Alpine.$persist(false),
+          showRevisionMenu: false,
 
+          /**
+           * Initializes component state
+           * @description Loads persisted revisions into the revision dropdown on startup.
+           */
           init() {
             this.setRevisions()
+          },
+
+          /**
+           * Opens the revision menu
+           * @description Displays the revision dropdown without changing editor content.
+           */
+          openRevisionMenu() {
+            this.showRevisionMenu = true
+          },
+
+          /**
+           * Closes the revision menu and returns focus to the trigger button
+           * @description Ensures predictable keyboard focus after menu interactions.
+           */
+          closeRevisionMenu() {
+            this.showRevisionMenu = false
+            this.$refs.revisionMenuTrigger.focus()
+          },
+
+          /**
+           * Toggles revision menu visibility
+           * @description Delegates open and close behavior to dedicated handlers.
+           */
+          toggleRevisionMenu() {
+            if (this.showRevisionMenu) {
+              this.closeRevisionMenu()
+
+              return
+            }
+
+            this.openRevisionMenu()
+          },
+
+          /**
+           * Loads a selected revision and closes the revision menu
+           * @param {string} localStorageRevisionKey - The localStorage key of revision to load
+           * @param {string} localStorageRevisionLabel - Display label for the selected revision
+           * @description Loads selected revision content and restores focus to the menu trigger.
+           */
+          selectRevision(localStorageRevisionKey, localStorageRevisionLabel) {
+            this.useRevision(localStorageRevisionKey, localStorageRevisionLabel)
+            this.closeRevisionMenu()
+          },
+
+          /**
+           * Deletes one revision and closes the revision menu
+           * @param {string} localStorageRevisionKey - The localStorage key of revision to delete
+           * @description Removes a single revision entry and returns focus to the menu trigger.
+           */
+          removeRevision(localStorageRevisionKey) {
+            this.deleteRevision(localStorageRevisionKey)
+            this.closeRevisionMenu()
+          },
+
+          /**
+           * Deletes all revisions and closes the revision menu
+           * @description Clears revision history and restores focus to the menu trigger.
+           */
+          removeAllRevisions() {
+            this.deleteRevisions()
+            this.closeRevisionMenu()
           },
 
           /**
