@@ -76,7 +76,6 @@ with focus on:
 - [x] Extracted magic strings to constants:
   - `REVISION_PREFIX = '_TM_'`
   - `FLASH_NOTIFICATION_DURATION = 2500`
-  - `AUTO_SAVE_DEBOUNCE = 10000`
   - `MAX_MARKDOWN_SIZE = 50000`
 - [x] Fixed CSS typo: removed `trangray-y-0.5` class
 
@@ -90,10 +89,12 @@ with focus on:
 
 - [x] Extract magic strings to constants (COMPLETED)
 - [x] Fix CSS typo (COMPLETED)
+- [x] Consolidate repeated UI classes into shared Alpine class tokens (grouped
+      toolbar + common panel surfaces)
 - [ ] Separate concerns: organize UI logic, storage logic, markdown logic (TODO)
 - **Impact:** Improved maintainability and readability
-- **Actual Effort:** 1.5 hours (constants & CSS)
-- **Remaining:** 1 hour (concerns separation)
+- **Actual Effort:** 2.5 hours (constants, CSS, and UI class token cleanup)
+- **Remaining:** 0.5-1 hour (concerns separation)
 
 ### 2.2 Code Documentation
 
@@ -105,7 +106,7 @@ with focus on:
 - [x] Add inline comments for non-obvious logic
 - **Impact:** Easier onboarding and refactoring
 - **Actual Effort:** 1.5 hours
-- **Documented Functions (14 total):**
+- **Documented Functions (13 total):**
   - Component-level: Main `fakeCms` - Alpine data structure, features overview
   - Selection/Syntax: `modifyMarkdown()`, `modifyMarkdownAdd()`,
     `modifyMarkdownRemove()`
@@ -114,8 +115,7 @@ with focus on:
   - Deletion: `deleteRevision()`, `deleteRevisions()`
   - Rendering: `refreshHtml()` - Markdown parsing with XSS sanitization
   - Notifications: `showNotification()` - Toast with emoji support
-  - Actions: `copyMarkdown()`, `deleteMarkdown()`, `refreshComponent()`,
-    `toggleFullscreen()`
+  - Actions: `copyMarkdown()`, `refreshComponent()`, `toggleFullscreen()`
 - **Style:** Consistent JSDoc format with @param, @returns, @description
   sections
 

@@ -116,7 +116,8 @@
 
                   <div
                     id="revision-menu"
-                    class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
+                    class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md max-h-56 overflow-auto"
+                    :class="surfacePanelClass"
                     role="menu"
                     aria-labelledby="revision-menu-button"
                     x-show="showRevisionMenu"
@@ -514,7 +515,8 @@
             <textarea
               id="markdown-editor"
               aria-label="Markdown editor input"
-              class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
+              class="w-full h-full rounded-xl p-6 resize-none focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
+              :class="surfacePanelClass"
               x-model="contentMarkdown"
               @input="validateMarkdownSize"
               @input.debounce.10000ms="saveRevision"
@@ -525,7 +527,8 @@
           </div>
 
           <div
-            class="dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] p-4 border rounded-lg text-xs font-medium hidden lg:flex lg:justify-between lg:items-center mt-4"
+            class="p-4 border rounded-lg text-xs font-medium hidden lg:flex lg:justify-between lg:items-center mt-4"
+            :class="surfacePanelClass"
           >
             <p> Created with a single HTML file. </p>
 
@@ -566,7 +569,8 @@
       <div
         role="alert"
         aria-live="assertive"
-        class="dark:bg-black p-4 border dark:border-[#333] rounded-lg dark:text-white text-sm font-medium bg-white border-[#EAEAEA]"
+        class="p-4 border rounded-lg text-sm font-medium"
+        :class="surfacePanelClass"
         x-text="notificationText"
       ></div>
     </div>
@@ -594,6 +598,7 @@
          * - contentMarkdown: Current markdown text (persisted to browser storage)
          * - contentHtml: Rendered HTML preview (sanitized for security)
          * - contentRevisions: Array of timestamped revision objects
+         * - surfacePanelClass: Shared Tailwind class string for bordered UI surfaces
          * - toolbarGroupClass: Shared Tailwind class string for grouped button wrappers
          * - toolbarButtonClass: Shared Tailwind class string for square toolbar buttons
          * - menuTriggerButtonClass: Shared Tailwind class string for revision menu trigger
@@ -606,12 +611,14 @@
           contentMarkdown: Alpine.$persist('# Hello there...'),
           contentHtml: '',
           contentRevisions: [],
+          surfacePanelClass:
+            'dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA]',
           toolbarGroupClass:
             'flex items-center gap-1 p-1 border rounded-lg border-[#EAEAEA] bg-white dark:border-[#333] dark:bg-black',
           toolbarButtonClass:
-            'w-8 h-8 rounded-md grid place-content-center text-[10px] font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-pink-500 focus:ring-inset',
+            'w-8 h-8 rounded-md grid place-content-center text-[10px] font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
           menuTriggerButtonClass:
-            'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-pink-500 focus:ring-inset flex items-center gap-2',
+            'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
           selectedRevisionLabel: 'Latest Revision',
           flashNotification: false,
           notificationText: '',
