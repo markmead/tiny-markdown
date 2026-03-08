@@ -129,21 +129,21 @@
                       <ul class="p-2" role="none">
                         <template
                           x-for="contentRevision in contentRevisions"
-                          :key="contentRevision.key"
+                          :key="contentRevision.revisionKey"
                         >
                           <li
                             class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
                             role="none"
                           >
                             <button
-                              @click="selectRevision(contentRevision.key, contentRevision.label)"
+                              @click="selectRevision(contentRevision.revisionKey, contentRevision.revisionLabel)"
                               role="menuitem"
                               class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-xs font-medium"
-                              x-text="contentRevision.label"
+                              x-text="contentRevision.revisionLabel"
                             ></button>
 
                             <button
-                              @click="removeRevision(contentRevision.key)"
+                              @click="removeRevision(contentRevision.revisionKey)"
                               role="menuitem"
                               aria-label="Delete revision"
                               class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
@@ -753,6 +753,129 @@
       const REVISION_PREFIX = '_TM_'
       const FLASH_NOTIFICATION_DURATION = 2500
       const MAX_MARKDOWN_SIZE = 50000 // 50KB
+      const DEFAULT_REVISION_LABEL = 'Latest Revision'
+
+      const revisionStore = {
+        saveEntry(markdownContent) {
+          localStorage.setItem(
+            `${REVISION_PREFIX}${new Date().getTime()}`,
+            `${markdownContent}`,
+          )
+        },
+
+        removeEntry(localStorageRevisionKey) {
+          localStorage.removeItem(localStorageRevisionKey)
+        },
+
+        removeAllEntries() {
+          const localStorageRevisionKeys = Object.keys(localStorage).filter(
+            (localStorageKey) => localStorageKey.includes(REVISION_PREFIX),
+          )
+
+          localStorageRevisionKeys.forEach((localStorageRevisionKey) =>
+            localStorage.removeItem(localStorageRevisionKey),
+          )
+        },
+
+        listEntries() {
+          const localStorageRevisions = Object.keys(localStorage)
+            .filter((localStorageKey) =>
+              localStorageKey.includes(REVISION_PREFIX),
+            )
+            .sort((firstDate, secondDate) => {
+              const firstDateAsTimestamp = firstDate.replace(
+                REVISION_PREFIX,
+                '',
+              )
+
+              const secondDateAsTimestamp = secondDate.replace(
+                REVISION_PREFIX,
+                '',
+              )
+
+              return (
+                new Date(Number(secondDateAsTimestamp)) -
+                new Date(Number(firstDateAsTimestamp))
+              )
+            })
+
+          return localStorageRevisions.map((localStorageRevisionKey) => {
+            const localStorageRevisionKeyAsTimestamp =
+              localStorageRevisionKey.replace(REVISION_PREFIX, '')
+
+            const formattedDate = new Date(
+              Number(localStorageRevisionKeyAsTimestamp),
+            ).toLocaleString()
+
+            return {
+              revisionKey: localStorageRevisionKey,
+              revisionLabel: formattedDate,
+            }
+          })
+        },
+
+        getEntry(localStorageRevisionKey) {
+          return localStorage.getItem(localStorageRevisionKey)
+        },
+      }
+
+      const markdownService = {
+        applySyntaxMarkers(
+          textBeforeSelection,
+          textAfterSelection,
+          selectedText,
+          syntaxBefore,
+          syntaxAfter = '',
+        ) {
+          return syntaxBefore === '```'
+            ? `${textBeforeSelection}${syntaxBefore}\n${selectedText}\n${syntaxAfter}${textAfterSelection}`
+            : `${textBeforeSelection}${syntaxBefore}${selectedText}${syntaxAfter}${textAfterSelection}`
+        },
+
+        stripSyntaxMarkers(
+          textBeforeSelection,
+          textAfterSelection,
+          selectedText,
+          syntaxBefore,
+          syntaxAfter = '',
+        ) {
+          const updatedSelectedMarkdown = selectedText
+            .replace(syntaxBefore, '')
+            .replace(syntaxAfter, '')
+
+          return `${textBeforeSelection}${updatedSelectedMarkdown}${textAfterSelection}`
+        },
+
+        enforceSizeLimit(markdownContent) {
+          if (markdownContent.length <= MAX_MARKDOWN_SIZE) {
+            return {
+              validatedContent: markdownContent,
+              exceedsSizeLimit: false,
+            }
+          }
+
+          return {
+            validatedContent: markdownContent.substring(0, MAX_MARKDOWN_SIZE),
+            exceedsSizeLimit: true,
+          }
+        },
+
+        renderSanitizedHtml(markdownContent) {
+          try {
+            const rawHtml = marked.parse(markdownContent)
+
+            return {
+              sanitizedHtml: DOMPurify.sanitize(rawHtml),
+              containsParseError: false,
+            }
+          } catch {
+            return {
+              sanitizedHtml: `<p>${DOMPurify.sanitize(markdownContent)}</p>`,
+              containsParseError: true,
+            }
+          }
+        },
+      }
 
       document.addEventListener('alpine:init', () => {
         /**
@@ -767,6 +890,7 @@
          * - Dark mode toggle with persistent user preference
          * - Toolbar with markdown formatting shortcuts
          * - 50KB size limit for optimal performance
+         * - Separation of concerns via markdownService and revisionStore helpers
          *
          * Data Properties:
          * - contentMarkdown: Current markdown text (persisted to browser storage)
@@ -793,7 +917,7 @@
             'size-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
           menuTriggerButtonClass:
             'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
-          selectedRevisionLabel: 'Latest Revision',
+          selectedRevisionLabel: DEFAULT_REVISION_LABEL,
           flashNotification: false,
           notificationText: '',
           isFullscreen: Alpine.$persist(false),
@@ -803,7 +927,7 @@
            * Initializes component state
            * @description Loads persisted revisions into the revision dropdown on startup.
            */
-          init() {
+          initializeComponent() {
             this.setRevisions()
           },
 
@@ -924,9 +1048,13 @@
             syntaxBefore,
             syntaxAfter = '',
           ) {
-            return syntaxBefore === '```'
-              ? `${textBeforeSelection}${syntaxBefore}\n${selectedText}\n${syntaxAfter}${textAfterSelection}`
-              : `${textBeforeSelection}${syntaxBefore}${selectedText}${syntaxAfter}${textAfterSelection}`
+            return markdownService.applySyntaxMarkers(
+              textBeforeSelection,
+              textAfterSelection,
+              selectedText,
+              syntaxBefore,
+              syntaxAfter,
+            )
           },
 
           /**
@@ -946,11 +1074,13 @@
             syntaxBefore,
             syntaxAfter = '',
           ) {
-            const updatedSelectedMarkdown = selectedText
-              .replace(syntaxBefore, '')
-              .replace(syntaxAfter, '')
-
-            return `${textBeforeSelection}${updatedSelectedMarkdown}${textAfterSelection}`
+            return markdownService.stripSyntaxMarkers(
+              textBeforeSelection,
+              textAfterSelection,
+              selectedText,
+              syntaxBefore,
+              syntaxAfter,
+            )
           },
 
           /**
@@ -971,12 +1101,13 @@
            * Shows notification when limit is reached.
            */
           validateMarkdownSize() {
-            if (this.contentMarkdown.length > MAX_MARKDOWN_SIZE) {
-              this.contentMarkdown = this.contentMarkdown.substring(
-                0,
-                MAX_MARKDOWN_SIZE,
-              )
+            const markdownSizeValidation = markdownService.enforceSizeLimit(
+              this.contentMarkdown,
+            )
 
+            this.contentMarkdown = markdownSizeValidation.validatedContent
+
+            if (markdownSizeValidation.exceedsSizeLimit) {
               this.showNotification('❌ Content limited to 50KB')
             }
           },
@@ -988,10 +1119,7 @@
            * (debounced) and manually via Save Revision button. Updates revision list after save.
            */
           saveRevision() {
-            localStorage.setItem(
-              `${REVISION_PREFIX}${new Date().getTime()}`,
-              `${this.contentMarkdown}`,
-            )
+            revisionStore.saveEntry(this.contentMarkdown)
 
             this.setRevisions()
           },
@@ -1002,7 +1130,8 @@
            * @description Updates revision list after deletion.
            */
           deleteRevision(localStorageRevisionKey) {
-            localStorage.removeItem(localStorageRevisionKey)
+            revisionStore.removeEntry(localStorageRevisionKey)
+            this.selectedRevisionLabel = DEFAULT_REVISION_LABEL
 
             this.setRevisions()
           },
@@ -1012,13 +1141,8 @@
            * @description Clears entire revision history. Updates revision list after deletion.
            */
           deleteRevisions() {
-            const localStorageRevisions = Object.keys(localStorage).filter(
-              (localStorageKey) => localStorageKey.includes(REVISION_PREFIX),
-            )
-
-            localStorageRevisions.forEach((localStorageRevisionKey) =>
-              localStorage.removeItem(localStorageRevisionKey),
-            )
+            revisionStore.removeAllEntries()
+            this.selectedRevisionLabel = DEFAULT_REVISION_LABEL
 
             this.setRevisions()
           },
@@ -1031,42 +1155,7 @@
            * Called after save/delete operations to refresh revision menu.
            */
           setRevisions() {
-            const localStorageRevisions = Object.keys(localStorage)
-              .filter((localStorageKey) =>
-                localStorageKey.includes(REVISION_PREFIX),
-              )
-              .sort((firstDate, secondDate) => {
-                const firstDateAsTimestamp = firstDate.replace(
-                  REVISION_PREFIX,
-                  '',
-                )
-
-                const secondDateAsTimestamp = secondDate.replace(
-                  REVISION_PREFIX,
-                  '',
-                )
-
-                return (
-                  new Date(Number(secondDateAsTimestamp)) -
-                  new Date(Number(firstDateAsTimestamp))
-                )
-              })
-
-            this.contentRevisions = localStorageRevisions.map(
-              (localStorageRevisionKey) => {
-                const localStorageRevisionKeyAsTimestamp =
-                  localStorageRevisionKey.replace(REVISION_PREFIX, '')
-
-                const formattedDate = new Date(
-                  Number(localStorageRevisionKeyAsTimestamp),
-                ).toLocaleString()
-
-                return {
-                  key: localStorageRevisionKey,
-                  label: formattedDate,
-                }
-              },
-            )
+            this.contentRevisions = revisionStore.listEntries()
           },
 
           /**
@@ -1076,7 +1165,9 @@
            * @description Replaces current content with selected revision and updates UI label.
            */
           useRevision(localStorageRevisionKey, localStorageRevisionLabel) {
-            this.contentMarkdown = localStorage.getItem(localStorageRevisionKey)
+            this.contentMarkdown = revisionStore.getEntry(
+              localStorageRevisionKey,
+            )
 
             this.selectedRevisionLabel = localStorageRevisionLabel
           },
@@ -1089,16 +1180,16 @@
            * plain-text display. Called reactively whenever contentMarkdown changes.
            */
           refreshHtml() {
-            try {
-              const rawHtml = marked.parse(this.contentMarkdown)
+            const renderedMarkdown = markdownService.renderSanitizedHtml(
+              this.contentMarkdown,
+            )
 
-              this.contentHtml = DOMPurify.sanitize(rawHtml)
-            } catch {
+            this.contentHtml = renderedMarkdown.sanitizedHtml
+
+            if (renderedMarkdown.containsParseError) {
               this.showNotification(
                 '⚠️ Markdown parsing error - preview unavailable',
               )
-
-              this.contentHtml = `<p>${DOMPurify.sanitize(this.contentMarkdown)}</p>`
             }
           },
 
