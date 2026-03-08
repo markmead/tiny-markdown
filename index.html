@@ -122,7 +122,7 @@
                     aria-labelledby="revision-menu-button"
                     x-show="showRevisionMenu"
                     x-cloak
-                    @click.away="closeRevisionMenu"
+                    @click.away="closeRevisionMenu(false)"
                     @keydown.escape.prevent="closeRevisionMenu"
                   >
                     <template x-if="contentRevisions.length">
@@ -563,8 +563,10 @@
                     stroke-linejoin="round"
                     class="size-4"
                   >
-                    <path d="m16 18 6-6-6-6" />
-                    <path d="m8 6-6 6 6 6" />
+                    <path d="M17 5H3" />
+                    <path d="M21 12H8" />
+                    <path d="M21 19H8" />
+                    <path d="M3 12v7" />
                   </svg>
                 </button>
               </div>
@@ -761,22 +763,35 @@
     <div
       x-cloak
       x-transition
-      x-show="flashNotification"
-      class="fixed inset-x-0 flex justify-center bottom-4"
+      x-show="notificationMessages.length"
+      class="fixed inset-x-0 bottom-4 flex flex-col items-center gap-2 px-4 pointer-events-none"
     >
-      <div
-        role="alert"
-        aria-live="assertive"
-        class="p-4 border rounded-lg text-sm font-medium"
-        :class="surfacePanelClass"
-        x-text="notificationText"
-      ></div>
+      <template
+        x-for="notificationMessage in notificationMessages"
+        :key="notificationMessage.notificationId"
+      >
+        <div
+          x-show="notificationMessage.isVisible"
+          x-transition:enter="transform transition ease-out duration-200"
+          x-transition:enter-start="translate-y-2 opacity-0 scale-95"
+          x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+          x-transition:leave="transform transition ease-in duration-150"
+          x-transition:leave-start="translate-y-0 opacity-100 scale-100"
+          x-transition:leave-end="translate-y-2 opacity-0 scale-95"
+          role="alert"
+          aria-live="assertive"
+          class="p-4 border rounded-lg text-sm font-medium pointer-events-auto"
+          :class="surfacePanelClass"
+          x-text="notificationMessage.textContent"
+        ></div>
+      </template>
     </div>
 
     <script>
       const REVISION_PREFIX = '_TM_'
-      const FLASH_NOTIFICATION_DURATION = 2500
-      const MAX_MARKDOWN_SIZE = 50000 // 50KB
+      const NOTIFICATION_DURATION = 2500
+      const NOTIFICATION_LEAVE_DURATION = 150
+      const MAX_MARKDOWN_SIZE = 50000
       const DEFAULT_REVISION_LABEL = 'Latest Revision'
       const DEFAULT_REVISION_KEY = null
 
@@ -794,7 +809,7 @@
 
         removeAllEntries() {
           const localStorageRevisionKeys = Object.keys(localStorage).filter(
-            (localStorageKey) => localStorageKey.includes(REVISION_PREFIX),
+            (localStorageKey) => localStorageKey.startsWith(REVISION_PREFIX),
           )
 
           localStorageRevisionKeys.forEach((localStorageRevisionKey) =>
@@ -805,7 +820,7 @@
         listEntries() {
           const localStorageRevisions = Object.keys(localStorage)
             .filter((localStorageKey) =>
-              localStorageKey.includes(REVISION_PREFIX),
+              localStorageKey.startsWith(REVISION_PREFIX),
             )
             .sort((firstDate, secondDate) => {
               const firstDateAsTimestamp = firstDate.replace(
@@ -931,6 +946,64 @@
         },
       }
 
+      const notificationService = {
+        createNotification(textContent) {
+          const notificationId = Date.now() + Math.random()
+
+          return {
+            notificationId,
+            textContent,
+            isVisible: false,
+          }
+        },
+
+        addNotification(notificationMessages, notificationMessage) {
+          return [...notificationMessages, notificationMessage]
+        },
+
+        setNotificationVisibility(
+          notificationMessages,
+          notificationId,
+          isVisible,
+        ) {
+          return notificationMessages.map((currentNotification) =>
+            currentNotification.notificationId === notificationId
+              ? { ...currentNotification, isVisible }
+              : currentNotification,
+          )
+        },
+
+        removeNotification(notificationMessages, notificationId) {
+          return notificationMessages.filter(
+            (currentNotification) =>
+              currentNotification.notificationId !== notificationId,
+          )
+        },
+
+        addTimeout(notificationTimeouts, notificationId, timeoutId) {
+          return {
+            ...notificationTimeouts,
+            [notificationId]: timeoutId,
+          }
+        },
+
+        removeTimeout(notificationTimeouts, notificationId) {
+          return Object.fromEntries(
+            Object.entries(notificationTimeouts).filter(
+              ([timeoutNotificationId]) =>
+                Number(timeoutNotificationId) !== notificationId,
+            ),
+          )
+        },
+
+        findNotification(notificationMessages, notificationId) {
+          return notificationMessages.find(
+            (currentNotification) =>
+              currentNotification.notificationId === notificationId,
+          )
+        },
+      }
+
       document.addEventListener('alpine:init', () => {
         /**
          * Main Alpine.js component for TinyMarkdown editor
@@ -954,8 +1027,8 @@
          * - toolbarGroupClass: Shared Tailwind class string for grouped button wrappers
          * - toolbarButtonClass: Shared Tailwind class string for square toolbar buttons
          * - menuTriggerButtonClass: Shared Tailwind class string for revision menu trigger
-         * - flashNotification: Boolean toggle for notification display
-         * - notificationText: Dynamic message content with emoji indicators
+         * - notificationMessages: Active notification queue for stacked alerts
+         * - notificationTimeouts: Timeout ids keyed by notification id
          * - isFullscreen: Boolean toggle to hide preview pane for full-width editing
          * - showRevisionMenu: Boolean toggle for revision menu visibility
          */
@@ -973,8 +1046,8 @@
             'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
           selectedRevisionKey: DEFAULT_REVISION_KEY,
           selectedRevisionLabel: DEFAULT_REVISION_LABEL,
-          flashNotification: false,
-          notificationText: '',
+          notificationMessages: [],
+          notificationTimeouts: {},
           isFullscreen: Alpine.$persist(false),
           showRevisionMenu: false,
 
@@ -987,12 +1060,16 @@
           },
 
           /**
-           * Closes the revision menu and returns focus to the trigger button
-           * @description Ensures predictable keyboard focus after menu interactions.
+           * Closes the revision menu and optionally returns focus to the trigger button
+           * @param {boolean} shouldFocusTrigger - Whether to focus the trigger after closing
+           * @description Skips focus restoration for click-away close to avoid stealing focus.
            */
-          closeRevisionMenu() {
+          closeRevisionMenu(shouldFocusTrigger = true) {
             this.showRevisionMenu = false
-            this.$refs.revisionMenuTrigger.focus()
+
+            if (shouldFocusTrigger) {
+              this.$refs.revisionMenuTrigger.focus()
+            }
           },
 
           /**
@@ -1140,12 +1217,16 @@
 
           /**
            * Copies current markdown content to clipboard
-           * @description Shows success notification after copy.
+           * @description Shows success notification on copy and error notification on failure.
            */
-          copyMarkdown() {
-            navigator.clipboard.writeText(this.contentMarkdown)
+          async copyMarkdown() {
+            try {
+              await navigator.clipboard.writeText(this.contentMarkdown)
 
-            this.showNotification('🎉 Copied to clipboard!')
+              this.showNotification('🎉 Copied to clipboard!')
+            } catch {
+              this.showNotification('❌ Unable to copy to clipboard')
+            }
           },
 
           /**
@@ -1279,16 +1360,98 @@
            * Displays a temporary notification message to the user
            * @param {string} textContent - Message text to display (supports emojis)
            * @description
-           * Shows notification for 2.5 seconds then auto-hides. Used for success (🎉),
-           * errors (❌), and warnings (⚠️). Single notification at a time (replaces previous).
+           * Adds a notification to the queue and auto-hides it after 2.5 seconds.
+           * Multiple notifications can be displayed concurrently.
            */
           showNotification(textContent) {
-            this.notificationText = textContent
-            this.flashNotification = true
+            const notificationMessage =
+              notificationService.createNotification(textContent)
 
-            setTimeout(
-              () => (this.flashNotification = false),
-              FLASH_NOTIFICATION_DURATION,
+            this.notificationMessages = notificationService.addNotification(
+              this.notificationMessages,
+              notificationMessage,
+            )
+
+            // Trigger enter transition after the node exists in the DOM.
+            this.$nextTick(() => {
+              this.notificationMessages =
+                notificationService.setNotificationVisibility(
+                  this.notificationMessages,
+                  notificationMessage.notificationId,
+                  true,
+                )
+            })
+
+            const timeoutId = setTimeout(
+              () => this.hideNotification(notificationMessage.notificationId),
+              NOTIFICATION_DURATION,
+            )
+
+            this.notificationTimeouts = notificationService.addTimeout(
+              this.notificationTimeouts,
+              notificationMessage.notificationId,
+              timeoutId,
+            )
+          },
+
+          /**
+           * Starts leave transition for a notification and removes it after animation.
+           * @param {number} notificationId - The unique id of the notification
+           */
+          hideNotification(notificationId) {
+            const notificationToHide = notificationService.findNotification(
+              this.notificationMessages,
+              notificationId,
+            )
+
+            if (!notificationToHide) {
+              return
+            }
+
+            const timeoutId = this.notificationTimeouts[notificationId]
+
+            if (timeoutId) {
+              clearTimeout(timeoutId)
+            }
+
+            this.notificationMessages =
+              notificationService.setNotificationVisibility(
+                this.notificationMessages,
+                notificationId,
+                false,
+              )
+
+            const newTimeoutId = setTimeout(
+              () => this.removeNotification(notificationId),
+              NOTIFICATION_LEAVE_DURATION,
+            )
+
+            this.notificationTimeouts = notificationService.addTimeout(
+              this.notificationTimeouts,
+              notificationId,
+              newTimeoutId,
+            )
+          },
+
+          /**
+           * Removes a notification by id and clears its pending timer
+           * @param {number} notificationId - The unique id of the notification
+           */
+          removeNotification(notificationId) {
+            const timeoutId = this.notificationTimeouts[notificationId]
+
+            if (timeoutId) {
+              clearTimeout(timeoutId)
+
+              this.notificationTimeouts = notificationService.removeTimeout(
+                this.notificationTimeouts,
+                notificationId,
+              )
+            }
+
+            this.notificationMessages = notificationService.removeNotification(
+              this.notificationMessages,
+              notificationId,
             )
           },
 
