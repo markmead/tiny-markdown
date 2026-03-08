@@ -82,7 +82,22 @@
               <div class="flex gap-1">
                 <div class="relative" x-data="{ showMenu: false }">
                   <button
-                    @click="showMenu = !showMenu"
+                    @click="
+                      showMenu = !showMenu;
+                      if (showMenu && contentRevisions.length) {
+                        $nextTick(() => $refs.revisionMenu?.querySelector('[data-revision-select]')?.focus())
+                      }
+                    "
+                    @keydown.escape.prevent="
+                      showMenu = false;
+                      $refs.revisionMenuTrigger.focus()
+                    "
+                    x-ref="revisionMenuTrigger"
+                    id="revision-menu-button"
+                    aria-haspopup="menu"
+                    :aria-expanded="showMenu"
+                    aria-controls="revision-menu"
+                    aria-label="Open revision history"
                     class="border rounded-md h-8 px-2 dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 transition focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset flex items-center gap-2"
                   >
                     <span
@@ -105,11 +120,20 @@
                   </button>
 
                   <div
+                    id="revision-menu"
+                    x-ref="revisionMenu"
                     class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] max-h-56 overflow-auto"
                     role="menu"
                     x-show="showMenu"
                     x-cloak
-                    @click.away="showMenu = false"
+                    @click.away="
+                      showMenu = false;
+                      $refs.revisionMenuTrigger.focus()
+                    "
+                    @keydown.escape.prevent="
+                      showMenu = false;
+                      $refs.revisionMenuTrigger.focus()
+                    "
                   >
                     <template x-if="contentRevisions.length">
                       <ul class="p-2">
@@ -123,12 +147,14 @@
                           >
                             <button
                               @click="useRevision(contentRevision.key, contentRevision.label)"
+                              data-revision-select
                               class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-[10px] font-medium"
                               x-text="contentRevision.label"
                             ></button>
 
                             <button
                               @click="deleteRevision(contentRevision.key)"
+                              aria-label="Delete revision"
                               class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
                             >
                               <svg
@@ -163,8 +189,9 @@
                       class="p-2 border-t border-[#EAEAEA] dark:border-[#333]"
                     >
                       <button
-                        class="flex items-center gap-2 p-2 text-red-600 transition font-med ium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
+                        class="flex items-center gap-2 p-2 text-red-600 transition font-medium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
                         @click="deleteRevisions"
+                        aria-label="Delete all revisions"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -489,7 +516,13 @@
           </div>
 
           <div class="flex-1 mt-4">
+            <label for="markdown-editor" class="sr-only">
+              Markdown editor input
+            </label>
+
             <textarea
+              id="markdown-editor"
+              aria-label="Markdown editor input"
               class="w-full h-full rounded-xl p-6 resize-none dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA] focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               x-model="contentMarkdown"
               @input="validateMarkdownSize"
@@ -524,6 +557,8 @@
           :class="{ 'hidden': isFullscreen }"
         >
           <article
+            role="region"
+            aria-label="Markdown preview"
             class="prose max-w-none dark:prose-invert dark:prose-pre:bg-[#111]"
             x-html="contentHtml"
           ></article>
@@ -541,6 +576,7 @@
         x-cloak
         x-show="flashNotification"
         role="alert"
+        aria-live="assertive"
         class="dark:bg-black p-4 border dark:border-[#333] rounded-lg dark:text-white text-sm font-medium bg-white border-[#EAEAEA]"
         x-text="notificationText"
       ></div>

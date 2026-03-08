@@ -121,26 +121,27 @@ with focus on:
 
 ### 2.3 Error Handling Enhancement
 
-**Status:** ⏳ TODO
+**Status:** ✅ COMPLETED
 
 - [x] Add try-catch around marked.js parsing (COMPLETED)
 - [x] User-friendly error messages (COMPLETED)
 - [x] Fallback rendering for parse failures (COMPLETED)
 - **Impact:** Better stability and user experience
 - **Actual Effort:** Completed in Phase 1
-- **Status:** DONE
 
 ### 2.4 Accessibility Improvements
 
-**Status:** ⏳ TODO
+**Status:** 🟡 PARTIALLY COMPLETED
 
-- [ ] Test keyboard navigation
-- [ ] Add focus management for modals
-- [ ] Verify ARIA labels completeness
+- [x] Implement keyboard navigation for revision menu (Escape to close)
+- [x] Add focus management for revision menu open/close
+- [x] Improve ARIA labels for interactive controls and editor/preview regions
 - [ ] Test with screen readers
 - **Impact:** WCAG 2.1 AA compliance
 - **Estimated Effort:** 2 hours
 - **Priority:** MEDIUM
+- **Notes:** Implemented in `index.html` (Session 5); screen reader validation
+  still pending
 
 ---
 
@@ -310,7 +311,8 @@ Week 4 (Mar 29-Apr4): Phase 4 - Testing & Deployment
 2. 🔄 **Phase 2 code quality** (IN PROGRESS)
    - Start with 2.2: Code Documentation (complex functions, Alpine structure)
    - Then 2.4: Accessibility Improvements (keyboard nav, ARIA)
-   - Then 2.1: Configuration object (remaining code refactoring)
+   - Then 2.1: Separation of concerns refactor (optional, low priority)
+
 3. 📋 **Security audit** (defer - already covered by DOMPurify)
 4. 🚀 **Phase 3: Enhanced features** (next milestone)
 5. 🎉 **Deploy to Vercel** (final step)
@@ -326,7 +328,7 @@ Week 4 (Mar 29-Apr4): Phase 4 - Testing & Deployment
 
 ---
 
-**Last Updated:** March 8, 2026 (Session 3)
+**Last Updated:** March 8, 2026 (Session 5)
 
 **Phase 1 Complete:**
 
