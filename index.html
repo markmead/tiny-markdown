@@ -689,7 +689,7 @@
             <textarea
               id="markdown-editor"
               aria-label="Markdown editor input"
-              class="w-full h-full rounded-xl p-6 resize-none focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
+              class="size-full rounded-xl p-6 resize-none focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
               :class="surfacePanelClass"
               x-model="contentMarkdown"
               @input="validateMarkdownSize"
@@ -721,7 +721,7 @@
         </div>
 
         <div
-          class="h-full px-8 py-8 overflow-auto bg-white lg:h-screen dark:bg-black sm:px-6 lg:px-8 lg:py-12"
+          class="h-full px-4 py-8 overflow-auto bg-white lg:h-screen dark:bg-black sm:px-6 lg:px-8 lg:py-12"
           :class="{ 'hidden': isFullscreen }"
         >
           <article
@@ -790,7 +790,7 @@
           toolbarGroupClass:
             'flex items-center gap-1 p-1 border rounded-lg border-[#EAEAEA] bg-white dark:border-[#333] dark:bg-black',
           toolbarButtonClass:
-            'w-8 h-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
+            'size-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
           menuTriggerButtonClass:
             'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
           selectedRevisionLabel: 'Latest Revision',
