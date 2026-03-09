@@ -910,7 +910,12 @@
             }
           } catch {
             return {
-              sanitizedHtml: `<p>${DOMPurify.sanitize(markdownContent)}</p>`,
+              sanitizedHtml: `<p>${DOMPurify.sanitize(markdownContent, {
+                ALLOWED_TAGS: [],
+                ALLOWED_ATTR: [],
+                ALLOW_ARIA_ATTR: false,
+                ALLOW_DATA_ATTR: false,
+              })}</p>`,
               containsParseError: true,
             }
           }
@@ -1339,8 +1344,9 @@
            * Parses markdown to HTML and sanitizes for secure display
            * @description
            * Uses marked.js to convert markdown to HTML and sanitizes output with DOMPurify
-           * to prevent XSS attacks. Shows error notification if parsing fails, falls back to
-           * plain-text display. Called reactively whenever contentMarkdown changes.
+           * to prevent XSS attacks. If parsing fails, uses a strict DOMPurify allowlist
+           * to render the raw markdown content as sanitized fallback output.
+           * Called reactively whenever contentMarkdown changes.
            */
           refreshHtml() {
             const renderedMarkdown = markdownService.renderSanitizedHtml(
