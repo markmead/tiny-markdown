@@ -58,13 +58,21 @@
     <script>
       tailwind.config = {
         darkMode: 'class',
+        plugins: [
+          function ({ addVariant }) {
+            addVariant(
+              'prose-checkbox',
+              '&.prose :where(input[type="checkbox"])',
+            )
+          },
+        ],
       }
     </script>
   </head>
   <body
     x-data="fakeCms"
     x-effect="refreshHtml"
-    class="dark:bg-[#111] bg-[#FAFAFA] relative"
+    class="dark:bg-[#111] bg-[#FAFAFA]"
   >
     <main>
       <div
@@ -75,7 +83,9 @@
           class="flex flex-col px-4 py-8 overflow-auto sm:px-6 lg:px-8 lg:py-12 lg:h-screen"
           :class="{ 'max-w-5xl mx-auto w-full': isFullscreen }"
         >
-          <div class="flex items-center justify-between">
+          <div
+            class="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between"
+          >
             <h1 class="text-lg font-bold dark:text-white">
               Tiny Markdown
               <span aria-hidden="true"> 🤏 </span>
@@ -337,7 +347,7 @@
           </div>
 
           <div
-            class="flex justify-between gap-4 overflow-auto [&::-webkit-scrollbar]:hidden mt-8"
+            class="flex justify-between gap-4 overflow-auto [&::-webkit-scrollbar]:hidden mt-4"
           >
             <div class="flex gap-4">
               <div :class="toolbarGroupClass">
@@ -405,29 +415,6 @@
                     <path d="M12 18V6" />
                     <path d="M17.5 10.5c1.7-1 3.5 0 3.5 1.5a2 2 0 0 1-2 2" />
                     <path d="M17 17.5c2 1.5 4 .3 4-1.5a2 2 0 0 0-2-2" />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('#### ')"
-                  aria-label="Heading four"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <path d="M12 18V6" />
-                    <path d="M17 10v3a1 1 0 0 0 1 1h3" />
-                    <path d="M21 10v8" />
-                    <path d="M4 12h8" />
-                    <path d="M4 18V6" />
                   </svg>
                 </button>
               </div>
@@ -567,6 +554,26 @@
                     <path d="M21 12H8" />
                     <path d="M21 19H8" />
                     <path d="M3 12v7" />
+                  </svg>
+                </button>
+
+                <button
+                  :class="toolbarButtonClass"
+                  @click="modifyMarkdown('- [ ] ')"
+                  aria-label="Checkbox"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="m9 12 2 2 4-4" />
                   </svg>
                 </button>
               </div>
@@ -753,7 +760,7 @@
           <article
             role="region"
             aria-label="Markdown preview"
-            class="prose max-w-none dark:prose-invert dark:prose-pre:bg-[#111]"
+            class="prose max-w-none dark:prose-invert dark:prose-pre:bg-[#111] prose-checkbox:mr-1 prose-checkbox:-mt-1 dark:checked:prose-checkbox:bg-[#111] prose-checkbox:text-black prose-checkbox:rounded prose-checkbox:size-5 dark:checked:prose-checkbox:bg-blue-600 dark:checked:prose-checkbox:border-blue-600 checked:prose-checkbox:bg-blue-500 checked:prose-checkbox:border-blue-500 prose-checkbox:border-[#EAEAEA] prose-checkbox:bg-white dark:prose-checkbox:border-[#333] dark:prose-checkbox:bg-[#111]"
             x-html="contentHtml"
           ></article>
         </div>
