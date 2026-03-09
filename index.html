@@ -58,24 +58,24 @@
     <script>
       tailwind.config = {
         darkMode: 'class',
+        plugins: [
+          function ({ addVariant }) {
+            addVariant(
+              'prose-checkbox',
+              '&.prose :where(input[type="checkbox"])',
+            )
+            addVariant(
+              'prose-checkbox-list',
+              '&.prose :where(ul:has(li > input[type="checkbox"]))',
+            )
+            addVariant(
+              'prose-checkbox-item',
+              '&.prose :where(ul:has(li > input[type="checkbox"]) li)',
+            )
+          },
+        ],
       }
     </script>
-
-    <style>
-      /* Hide list markers for task list items */
-      .prose ul:has(li > input[type='checkbox']) {
-        list-style: none;
-        padding-left: 0;
-      }
-
-      .prose ul:has(li > input[type='checkbox']) li {
-        padding-left: 0;
-      }
-
-      .prose input[type='checkbox'] {
-        margin-right: 0.5rem;
-      }
-    </style>
   </head>
   <body
     x-data="fakeCms"
@@ -589,7 +589,7 @@
                 <button
                   :class="toolbarButtonClass"
                   @click="modifyMarkdown('- [ ] ')"
-                  aria-label="Checklist"
+                  aria-label="Checkbox"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -789,7 +789,7 @@
           <article
             role="region"
             aria-label="Markdown preview"
-            class="prose max-w-none dark:prose-invert dark:prose-pre:bg-[#111]"
+            class="prose max-w-none dark:prose-invert dark:prose-pre:bg-[#111] dark:checked:prose-checkbox:bg-[#111] prose-checkbox:text-black prose-checkbox:rounded prose-checkbox:size-5 prose-checkbox-item:flex prose-checkbox-item:gap-2 prose-checkbox-item:items-center dark:checked:prose-checkbox:bg-blue-600 dark:checked:prose-checkbox:border-blue-600 checked:prose-checkbox:bg-blue-500 checked:prose-checkbox:border-blue-500 prose-checkbox:border-[#EAEAEA] prose-checkbox:bg-white dark:prose-checkbox:border-[#333] dark:prose-checkbox:bg-[#111] prose-checkbox-list:list-none prose-checkbox-list:pl-0 prose-checkbox-item:pl-0"
             x-html="contentHtml"
           ></article>
         </div>
