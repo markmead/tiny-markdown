@@ -250,6 +250,51 @@
 
               <div :class="toolbarGroupClass">
                 <button
+                  @click="openSearchPanel"
+                  aria-label="Search and replace"
+                  :class="toolbarButtonClass"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                </button>
+
+                <button
+                  @click="showLineNumbers = !showLineNumbers"
+                  :aria-label="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
+                  :aria-pressed="showLineNumbers"
+                  :class="toolbarButtonClass"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                  >
+                    <line x1="10" x2="21" y1="6" y2="6" />
+                    <line x1="10" x2="21" y1="12" y2="12" />
+                    <line x1="10" x2="21" y1="18" y2="18" />
+                    <path d="M4 6h1v4" />
+                    <path d="M4 10h2" />
+                    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+                  </svg>
+                </button>
+
+                <button
                   @click="darkMode = !darkMode"
                   aria-label="Toggle dark mode"
                   :class="toolbarButtonClass"
@@ -645,53 +690,6 @@
             <div :class="toolbarGroupClass">
               <button
                 :class="toolbarButtonClass"
-                @click="openSearchPanel"
-                aria-label="Search and replace"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
-              </button>
-
-              <button
-                :class="toolbarButtonClass"
-                @click="showLineNumbers = !showLineNumbers"
-                :aria-label="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
-                :aria-pressed="showLineNumbers"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <line x1="10" x2="21" y1="6" y2="6" />
-                  <line x1="10" x2="21" y1="12" y2="12" />
-                  <line x1="10" x2="21" y1="18" y2="18" />
-                  <path d="M4 6h1v4" />
-                  <path d="M4 10h2" />
-                  <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
-                </svg>
-              </button>
-            </div>
-
-            <div :class="toolbarGroupClass">
-              <button
-                :class="toolbarButtonClass"
                 @click="exportMarkdownDocument"
                 aria-label="Export markdown"
               >
@@ -852,26 +850,26 @@
             </div>
 
             <div
-              class="flex-1 flex rounded-xl overflow-hidden border focus-within:border-pink-500 focus-within:ring-1 focus-within:ring-pink-500 focus-within:ring-inset"
+              class="flex-1 relative flex rounded-xl border focus-within:border-pink-500 focus-within:ring-1 focus-within:ring-pink-500 focus-within:ring-inset"
               :class="surfacePanelClass"
             >
               <div
                 x-show="showLineNumbers"
                 x-cloak
                 x-ref="lineNumbersGutter"
-                class="select-none text-right py-6 pl-2 pr-3 border-r border-[#EAEAEA] dark:border-[#333] text-gray-400 dark:text-gray-600 text-xs font-mono overflow-hidden"
-                style="line-height: 1.5rem; min-width: 2.5rem;"
+                class="select-none text-right leading-6 py-6 pl-2 pr-3 border-r border-[#EAEAEA] dark:border-[#333] text-gray-400 dark:text-gray-600 text-xs font-mono overflow-hidden rounded-l-xl"
+                style="min-width: 2.5rem;"
                 aria-hidden="true"
               >
                 <template x-for="lineNum in editorLineNumbers" :key="lineNum">
-                  <div style="line-height: 1.5rem" x-text="lineNum"></div>
+                  <div class="leading-6" x-text="lineNum"></div>
                 </template>
               </div>
 
               <textarea
                 id="markdown-editor"
                 aria-label="Markdown editor input"
-                class="flex-1 p-6 resize-none focus:outline-none bg-transparent dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                class="flex-1 p-6 pb-10 leading-6 resize-none focus:outline-none bg-transparent dark:text-white placeholder-gray-400 dark:placeholder-gray-600 rounded-xl"
                 x-model="contentMarkdown"
                 @input="validateMarkdownSize"
                 @input.debounce.10000ms="saveRevision"
@@ -879,8 +877,15 @@
                 @keydown="handleKeyboardShortcut"
                 x-ref="textarea"
                 placeholder="Enter markdown..."
-                style="line-height: 1.5rem;"
               ></textarea>
+
+              <div
+                class="absolute bottom-3 right-4 flex gap-3 text-xs font-medium text-gray-400 dark:text-gray-600 pointer-events-none select-none"
+              >
+                <span x-text="`${charCount} chars`"></span>
+                <span x-text="`${wordCount} words`"></span>
+                <span x-text="`${lineCountMetric} lines`"></span>
+              </div>
             </div>
           </div>
 
@@ -888,11 +893,7 @@
             class="p-4 border rounded-lg text-xs font-medium hidden lg:flex lg:justify-between lg:items-center mt-4"
             :class="surfacePanelClass"
           >
-            <div class="flex gap-4">
-              <span x-text="`${charCount} chars`"></span>
-              <span x-text="`${wordCount} words`"></span>
-              <span x-text="`${lineCountMetric} lines`"></span>
-            </div>
+            <p> Created with a single HTML file. </p>
 
             <p>
               View on
@@ -1728,11 +1729,10 @@
           },
 
           /**
-           * Closes the search/replace panel and returns focus to the textarea
+           * Closes the search/replace panel
            */
           closeSearchPanel() {
             this.showSearchPanel = false
-            this.$nextTick(() => this.$refs.textarea.focus())
           },
 
           /**
