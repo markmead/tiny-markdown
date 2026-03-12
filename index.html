@@ -857,7 +857,7 @@
                 x-show="showLineNumbers"
                 x-cloak
                 x-ref="lineNumbersGutter"
-                class="select-none text-right leading-6 py-6 pl-2 pr-3 border-r border-[#EAEAEA] dark:border-[#333] text-gray-400 dark:text-gray-600 text-xs font-mono overflow-hidden rounded-l-xl"
+                class="select-none text-right leading-6 py-6 pl-2 pr-3 border-r border-[#EAEAEA] dark:border-[#333] text-gray-400 dark:text-gray-600 text-xs font-mono overflow-hidden"
                 style="min-width: 2.5rem;"
                 aria-hidden="true"
               >
@@ -869,7 +869,7 @@
               <textarea
                 id="markdown-editor"
                 aria-label="Markdown editor input"
-                class="flex-1 p-6 pb-10 leading-6 resize-none focus:outline-none bg-transparent dark:text-white placeholder-gray-400 dark:placeholder-gray-600 rounded-xl"
+                class="flex-1 p-6 pb-10 leading-6 resize-none focus:outline-none bg-transparent dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
                 x-model="contentMarkdown"
                 @input="validateMarkdownSize"
                 @input.debounce.10000ms="saveRevision"
