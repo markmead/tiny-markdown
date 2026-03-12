@@ -727,6 +727,10 @@
               x-model="contentMarkdown"
               @input="validateMarkdownSize"
               @input.debounce.10000ms="saveRevision"
+              @keydown.cmd.b="modifyMarkdown('**', '**')"
+              @keydown.cmd.i="modifyMarkdown('_', '_')"
+              @keydown.ctrl.b="modifyMarkdown('**', '**')"
+              @keydown.ctrl.i="modifyMarkdown('_', '_')"
               x-ref="textarea"
               placeholder="Enter markdown..."
             >
