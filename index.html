@@ -1757,7 +1757,9 @@
               textarea.focus()
               textarea.setSelectionRange(index, index + term.length)
               const linesBefore = content.substring(0, index).split('\n').length
-              textarea.scrollTop = (linesBefore - 1) * 24
+              const lineHeight =
+                parseFloat(getComputedStyle(textarea).lineHeight) || 24
+              textarea.scrollTop = (linesBefore - 1) * lineHeight
             }
           },
 
@@ -1794,9 +1796,10 @@
 
             if (count === 0) return
 
-            this.contentMarkdown = this.contentMarkdown
-              .split(this.searchTerm)
-              .join(this.replaceTerm)
+            this.contentMarkdown = this.contentMarkdown.replaceAll(
+              this.searchTerm,
+              this.replaceTerm,
+            )
 
             this.showNotification(
               `🎉 Replaced ${count} occurrence${count === 1 ? '' : 's'}`,
