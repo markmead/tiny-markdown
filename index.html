@@ -645,6 +645,53 @@
             <div :class="toolbarGroupClass">
               <button
                 :class="toolbarButtonClass"
+                @click="openSearchPanel"
+                aria-label="Search and replace"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </button>
+
+              <button
+                :class="toolbarButtonClass"
+                @click="showLineNumbers = !showLineNumbers"
+                :aria-label="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
+                :aria-pressed="showLineNumbers"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="size-4"
+                >
+                  <line x1="10" x2="21" y1="6" y2="6" />
+                  <line x1="10" x2="21" y1="12" y2="12" />
+                  <line x1="10" x2="21" y1="18" y2="18" />
+                  <path d="M4 6h1v4" />
+                  <path d="M4 10h2" />
+                  <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+                </svg>
+              </button>
+            </div>
+
+            <div :class="toolbarGroupClass">
+              <button
+                :class="toolbarButtonClass"
                 @click="exportMarkdownDocument"
                 aria-label="Export markdown"
               >
@@ -714,30 +761,138 @@
             </div>
           </div>
 
-          <div class="flex-1 mt-4">
+          <div class="flex-1 mt-4 flex flex-col gap-2">
             <label for="markdown-editor" class="sr-only">
               Markdown editor input
             </label>
 
-            <textarea
-              id="markdown-editor"
-              aria-label="Markdown editor input"
-              class="size-full rounded-xl p-6 resize-none focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
+            <div
+              x-show="showSearchPanel"
+              x-cloak
+              x-transition:enter="transition ease-out duration-150"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+              x-transition:leave="transition ease-in duration-100"
+              x-transition:leave-start="opacity-100"
+              x-transition:leave-end="opacity-0"
+              class="p-3 border rounded-xl flex flex-col gap-2"
               :class="surfacePanelClass"
-              x-model="contentMarkdown"
-              @input="validateMarkdownSize"
-              @input.debounce.10000ms="saveRevision"
-              x-ref="textarea"
-              placeholder="Enter markdown..."
             >
-            </textarea>
+              <div class="flex flex-wrap gap-2 items-center">
+                <input
+                  type="text"
+                  x-model="searchTerm"
+                  x-ref="searchInput"
+                  placeholder="Search..."
+                  @keydown.enter="findNextMatch"
+                  @keydown.escape.prevent="closeSearchPanel"
+                  class="flex-1 min-w-0 h-8 px-3 rounded-lg text-xs border border-[#EAEAEA] dark:border-[#333] bg-white dark:bg-black dark:text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-pink-500 focus:border-pink-500"
+                />
+
+                <input
+                  type="text"
+                  x-model="replaceTerm"
+                  placeholder="Replace with..."
+                  @keydown.escape.prevent="closeSearchPanel"
+                  class="flex-1 min-w-0 h-8 px-3 rounded-lg text-xs border border-[#EAEAEA] dark:border-[#333] bg-white dark:bg-black dark:text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-pink-500 focus:border-pink-500"
+                />
+
+                <div class="flex gap-1">
+                  <button
+                    @click="findNextMatch"
+                    :class="searchActionButtonClass"
+                    aria-label="Find next match"
+                  >
+                    Next
+                  </button>
+
+                  <button
+                    @click="replaceCurrentMatch"
+                    :class="searchActionButtonClass"
+                    aria-label="Replace current match"
+                  >
+                    Replace
+                  </button>
+
+                  <button
+                    @click="replaceAllMatches"
+                    :class="searchActionButtonClass"
+                    aria-label="Replace all matches"
+                  >
+                    All
+                  </button>
+
+                  <button
+                    @click="closeSearchPanel"
+                    :class="toolbarButtonClass"
+                    aria-label="Close search panel"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <p
+                x-show="searchTerm"
+                class="text-xs text-gray-500 dark:text-gray-400"
+                x-text="matchCountText"
+              ></p>
+            </div>
+
+            <div
+              class="flex-1 flex rounded-xl overflow-hidden border focus-within:border-pink-500 focus-within:ring-1 focus-within:ring-pink-500 focus-within:ring-inset"
+              :class="surfacePanelClass"
+            >
+              <div
+                x-show="showLineNumbers"
+                x-cloak
+                x-ref="lineNumbersGutter"
+                class="select-none text-right py-6 pl-2 pr-3 border-r border-[#EAEAEA] dark:border-[#333] text-gray-400 dark:text-gray-600 text-xs font-mono overflow-hidden"
+                style="line-height: 1.5rem; min-width: 2.5rem;"
+                aria-hidden="true"
+              >
+                <template x-for="lineNum in editorLineNumbers" :key="lineNum">
+                  <div style="line-height: 1.5rem" x-text="lineNum"></div>
+                </template>
+              </div>
+
+              <textarea
+                id="markdown-editor"
+                aria-label="Markdown editor input"
+                class="flex-1 p-6 resize-none focus:outline-none bg-transparent dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                x-model="contentMarkdown"
+                @input="validateMarkdownSize"
+                @input.debounce.10000ms="saveRevision"
+                @scroll="syncLineNumbersGutter"
+                @keydown="handleKeyboardShortcut"
+                x-ref="textarea"
+                placeholder="Enter markdown..."
+                style="line-height: 1.5rem;"
+              ></textarea>
+            </div>
           </div>
 
           <div
             class="p-4 border rounded-lg text-xs font-medium hidden lg:flex lg:justify-between lg:items-center mt-4"
             :class="surfacePanelClass"
           >
-            <p> Created with a single HTML file. </p>
+            <div class="flex gap-4">
+              <span x-text="`${charCount} chars`"></span>
+              <span x-text="`${wordCount} words`"></span>
+              <span x-text="`${lineCountMetric} lines`"></span>
+            </div>
 
             <p>
               View on
@@ -1029,6 +1184,10 @@
          * - Dark mode toggle with persistent user preference
          * - Toolbar with markdown formatting shortcuts
          * - 50KB size limit for optimal performance
+         * - Keyboard shortcuts (Ctrl/Cmd+B bold, Ctrl/Cmd+I italic, Ctrl/Cmd+K code, Ctrl/Cmd+F search)
+         * - Character, word and line count metrics
+         * - Optional line numbers gutter with scroll sync
+         * - Search and replace panel
          * - Separation of concerns via markdownService and revisionStore helpers
          *
          * Data Properties:
@@ -1038,11 +1197,16 @@
          * - surfacePanelClass: Shared Tailwind class string for bordered UI surfaces
          * - toolbarGroupClass: Shared Tailwind class string for grouped button wrappers
          * - toolbarButtonClass: Shared Tailwind class string for square toolbar buttons
+         * - searchActionButtonClass: Shared Tailwind class string for text action buttons
          * - menuTriggerButtonClass: Shared Tailwind class string for revision menu trigger
          * - notificationMessages: Active notification queue for stacked alerts
          * - notificationTimeouts: Timeout ids keyed by notification id
          * - isFullscreen: Boolean toggle to hide preview pane for full-width editing
          * - showRevisionMenu: Boolean toggle for revision menu visibility
+         * - showLineNumbers: Boolean toggle for line numbers gutter
+         * - showSearchPanel: Boolean toggle for search/replace panel
+         * - searchTerm: Current search string
+         * - replaceTerm: Current replacement string
          */
         Alpine.data('fakeCms', () => ({
           contentMarkdown: Alpine.$persist('# Hello there...'),
@@ -1054,6 +1218,8 @@
             'flex items-center gap-1 p-1 border rounded-lg border-[#EAEAEA] bg-white dark:border-[#333] dark:bg-black',
           toolbarButtonClass:
             'size-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
+          searchActionButtonClass:
+            'h-8 px-3 rounded-md text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
           menuTriggerButtonClass:
             'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
           selectedRevisionKey: DEFAULT_REVISION_KEY,
@@ -1062,6 +1228,48 @@
           notificationTimeouts: {},
           isFullscreen: Alpine.$persist(false),
           showRevisionMenu: false,
+          showLineNumbers: false,
+          showSearchPanel: false,
+          searchTerm: '',
+          replaceTerm: '',
+
+          get charCount() {
+            return this.contentMarkdown.length
+          },
+
+          get wordCount() {
+            const trimmed = this.contentMarkdown.trim()
+            return trimmed ? trimmed.split(/\s+/).length : 0
+          },
+
+          get lineCountMetric() {
+            return this.contentMarkdown.split('\n').length
+          },
+
+          get editorLineNumbers() {
+            const count = this.contentMarkdown.split('\n').length
+            return Array.from({ length: count }, (_, i) => i + 1)
+          },
+
+          get matchCount() {
+            if (!this.searchTerm) return 0
+            let count = 0
+            let pos = 0
+            const term = this.searchTerm
+            const content = this.contentMarkdown
+            while ((pos = content.indexOf(term, pos)) !== -1) {
+              count++
+              pos += term.length
+            }
+            return count
+          },
+
+          get matchCountText() {
+            const count = this.matchCount
+            return count === 0
+              ? 'No matches'
+              : `${count} match${count === 1 ? '' : 'es'}`
+          },
 
           /**
            * Initializes component state
@@ -1482,6 +1690,130 @@
            */
           toggleFullscreen() {
             this.isFullscreen = !this.isFullscreen
+          },
+
+          /**
+           * Handles keyboard shortcuts fired within the textarea
+           * @param {KeyboardEvent} event - The keyboard event
+           * @description
+           * Ctrl/Cmd+B: bold, Ctrl/Cmd+I: italic, Ctrl/Cmd+K: inline code,
+           * Ctrl/Cmd+F: open search panel.
+           */
+          handleKeyboardShortcut(event) {
+            const ctrlOrMeta = event.metaKey || event.ctrlKey
+
+            if (!ctrlOrMeta) return
+
+            if (event.key === 'b') {
+              event.preventDefault()
+              this.modifyMarkdown('**', '**')
+            } else if (event.key === 'i') {
+              event.preventDefault()
+              this.modifyMarkdown('_', '_')
+            } else if (event.key === 'k') {
+              event.preventDefault()
+              this.modifyMarkdown('`', '`')
+            } else if (event.key === 'f') {
+              event.preventDefault()
+              this.openSearchPanel()
+            }
+          },
+
+          /**
+           * Opens the search/replace panel and focuses the search input
+           */
+          openSearchPanel() {
+            this.showSearchPanel = true
+            this.$nextTick(() => this.$refs.searchInput?.focus())
+          },
+
+          /**
+           * Closes the search/replace panel and returns focus to the textarea
+           */
+          closeSearchPanel() {
+            this.showSearchPanel = false
+            this.$nextTick(() => this.$refs.textarea.focus())
+          },
+
+          /**
+           * Selects the next occurrence of searchTerm in the textarea
+           * @description Wraps around to the beginning when the end of content is reached.
+           */
+          findNextMatch() {
+            if (!this.searchTerm) return
+
+            const content = this.contentMarkdown
+            const term = this.searchTerm
+            const textarea = this.$refs.textarea
+            const start = textarea.selectionEnd ?? 0
+
+            let index = content.indexOf(term, start)
+
+            if (index === -1) {
+              index = content.indexOf(term, 0)
+            }
+
+            if (index !== -1) {
+              textarea.focus()
+              textarea.setSelectionRange(index, index + term.length)
+              const linesBefore = content.substring(0, index).split('\n').length
+              textarea.scrollTop = (linesBefore - 1) * 24
+            }
+          },
+
+          /**
+           * Replaces the currently selected match and advances to the next one
+           * @description If the selection does not match searchTerm, advances without replacing.
+           */
+          replaceCurrentMatch() {
+            if (!this.searchTerm) return
+
+            const textarea = this.$refs.textarea
+            const selStart = textarea.selectionStart
+            const selEnd = textarea.selectionEnd
+            const selected = this.contentMarkdown.substring(selStart, selEnd)
+
+            if (selected === this.searchTerm) {
+              this.contentMarkdown =
+                this.contentMarkdown.substring(0, selStart) +
+                this.replaceTerm +
+                this.contentMarkdown.substring(selEnd)
+            }
+
+            this.$nextTick(() => this.findNextMatch())
+          },
+
+          /**
+           * Replaces every occurrence of searchTerm with replaceTerm
+           * @description Shows a notification with the number of replacements made.
+           */
+          replaceAllMatches() {
+            if (!this.searchTerm) return
+
+            const count = this.matchCount
+
+            if (count === 0) return
+
+            this.contentMarkdown = this.contentMarkdown
+              .split(this.searchTerm)
+              .join(this.replaceTerm)
+
+            this.showNotification(
+              `🎉 Replaced ${count} occurrence${count === 1 ? '' : 's'}`,
+            )
+          },
+
+          /**
+           * Syncs the line numbers gutter scroll position with the textarea
+           */
+          syncLineNumbersGutter() {
+            if (!this.showLineNumbers) return
+
+            const gutter = this.$refs.lineNumbersGutter
+
+            if (gutter) {
+              gutter.scrollTop = this.$refs.textarea.scrollTop
+            }
           },
         }))
       })
