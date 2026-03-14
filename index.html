@@ -42,6 +42,8 @@
     />
     <meta property="twitter:image" content="/cover.jpg" />
 
+    <script src="https://cdn.jsdelivr.net/npm/slugify@1.6.8/slugify.min.js"></script>
+
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3/dist/cdn.min.js"
@@ -931,13 +933,29 @@
             }
           }
         },
+        /**
+         * Extracts the first H1 (# ) from markdown content
+         * Returns null if not found
+         */
+        extractH1(markdownContent) {
+          const [_, h1Content] = markdownContent.match(/^#\s+(.+)/m) || []
+
+          return h1Content ? h1Content.trim() : null
+        },
       }
 
       const exportService = {
-        createFileName(fileExtension) {
+        createFileName(fileExtension, markdownContent) {
+          const exportTitle =
+            markdownService.extractH1(markdownContent) ?? 'Tiny Markdown'
+          const sluggedTitle = slugify(exportTitle, {
+            lower: true,
+            strict: true,
+          })
+
           const exportTimestamp = Date.now()
 
-          return `tiny-markdown-${exportTimestamp}.${fileExtension}`
+          return `${sluggedTitle}-${exportTimestamp}.${fileExtension}`
         },
 
         downloadFile(fileContent, fileName, fileType) {
@@ -956,7 +974,7 @@
         exportMarkdown(markdownContent) {
           this.downloadFile(
             markdownContent,
-            this.createFileName('md'),
+            this.createFileName('md', markdownContent),
             'text/markdown;charset=utf-8',
           )
         },
