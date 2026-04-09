@@ -728,7 +728,7 @@
               :class="surfacePanelClass"
               x-model="contentMarkdown"
               @input="validateMarkdownSize"
-              @input.debounce.10000ms="saveRevision"
+              @input.debounce.20000ms="autoSaveRevision"
               @keydown.cmd.b="modifyMarkdown('**', '**')"
               @keydown.cmd.i="modifyMarkdown('_', '_')"
               @keydown.ctrl.b="modifyMarkdown('**', '**')"
@@ -1292,6 +1292,36 @@
             revisionStore.saveEntry(this.contentMarkdown)
 
             this.setRevisions()
+          },
+
+          /**
+           * Auto-saves only when content changed from the latest revision
+           * @description Prevents duplicate revisions when no markdown edits occurred.
+           */
+          autoSaveRevision() {
+            if (!this.hasContentChangedSinceLatestRevision()) {
+              return
+            }
+
+            this.saveRevision()
+          },
+
+          /**
+           * Checks whether current editor content differs from latest saved revision
+           * @returns {boolean} True when content should be saved as a new revision
+           */
+          hasContentChangedSinceLatestRevision() {
+            const [latestRevision] = this.contentRevisions
+
+            if (!latestRevision) {
+              return true
+            }
+
+            const latestRevisionContent = revisionStore.getEntry(
+              latestRevision.revisionKey,
+            )
+
+            return latestRevisionContent !== this.contentMarkdown
           },
 
           /**
