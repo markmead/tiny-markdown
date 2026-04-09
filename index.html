@@ -87,7 +87,7 @@
     </script>
   </head>
   <body
-    x-data="fakeCms"
+    x-data="markdownEditor"
     x-effect="refreshHtml"
     class="dark:bg-[#111] bg-[#FAFAFA]"
   >
@@ -1081,7 +1081,7 @@
          * - isFullscreen: Boolean toggle to hide preview pane for full-width editing
          * - showRevisionMenu: Boolean toggle for revision menu visibility
          */
-        Alpine.data('fakeCms', () => ({
+        Alpine.data('markdownEditor', () => ({
           contentMarkdown: Alpine.$persist('# Hello there...'),
           contentHtml: '',
           contentRevisions: [],
