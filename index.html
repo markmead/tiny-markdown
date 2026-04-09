@@ -6,17 +6,26 @@
 >
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Tiny Markdown 🤏 | Online Markdown Editor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 16 16'><text x='0' y='14'>📝</text></svg>"
+    />
 
     <meta
       name="description"
       content="Simple markdown editor in the browser for quick and easy markdown creation."
     />
-
-    <link rel="icon" href="https://fav.farm/📝" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tiny-markdown.vercel.app/" />
@@ -42,19 +51,25 @@
     />
     <meta property="twitter:image" content="/cover.jpg" />
 
-    <script src="https://cdn.jsdelivr.net/npm/slugify@1.6.8/slugify.min.js"></script>
-
     <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3/dist/cdn.min.js"
+      src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.15/dist/cdn.min.js"
+      integrity="sha256-532TLFLOYWwqXF3EVTCgIhkRoxqrSKF56GgJMtTTqkc="
+      crossorigin="anonymous"
     ></script>
 
     <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.15/dist/cdn.min.js"
+      integrity="sha256-vuumPQiVb2T6Bg9rainIejQb8Gn7lslFnCIsb9QuWK4="
+      crossorigin="anonymous"
     ></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.3/dist/purify.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/dompurify@3.3/dist/purify.min.js"
+      integrity="sha256-qV4Cjl79anQT0dGNbZ+Rj9rRnivm6WL8uqEKsbNkclw="
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/slugify@1.6/slugify.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
