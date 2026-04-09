@@ -2,7 +2,7 @@
 
 Tiny Markdown is a fast, single-file markdown editor with live preview.
 
-![](https://tiny-markdown.vercel.app/cover.jpg)
+![](https://tiny-markdown.mm-dev.workers.dev/cover.jpg)
 
 ## What It Does
 
