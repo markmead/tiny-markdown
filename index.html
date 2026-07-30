@@ -1,7 +1,7 @@
 <!doctype html>
 <html
   lang="en"
-  x-data="{ darkMode: $persist(window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+  x-data="{ darkMode: $persist(globalThis.matchMedia('(prefers-color-scheme: dark)').matches) }"
   :class="{ 'dark': darkMode }"
   x-effect="document.getElementById('theme-color').content = darkMode ? '#0B0B0B' : '#FAFAFA'"
 >
@@ -89,31 +89,26 @@
     </style>
 
     <!--
-      Blocking so the theme is resolved before first paint. Without this the
-      persisted dark mode only lands once Alpine boots, flashing a light page.
-      Mirrors Alpine Persist's `_x_` localStorage key.
+      Blocking so the persisted theme lands before first paint. Alpine loads
+      deferred from a CDN, so its `dark` binding only applies once the page has
+      already flashed light. Reads Alpine Persist's `_x_` localStorage key.
+      Everything else about the theme, theme-color included, stays Alpine's.
     -->
     <script>
-      ;(function applyStoredTheme() {
-        try {
-          var storedPreference = localStorage.getItem('_x_darkMode')
+      try {
+        const storedPreference = localStorage.getItem('_x_darkMode')
 
-          var prefersDark =
-            storedPreference === null
-              ? window.matchMedia('(prefers-color-scheme: dark)').matches
-              : JSON.parse(storedPreference)
+        const prefersDark =
+          storedPreference === null
+            ? globalThis.matchMedia('(prefers-color-scheme: dark)').matches
+            : JSON.parse(storedPreference)
 
-          if (prefersDark) {
-            document.documentElement.classList.add('dark')
-          }
-
-          document
-            .getElementById('theme-color')
-            .setAttribute('content', prefersDark ? '#0B0B0B' : '#FAFAFA')
-        } catch (themeError) {
-          /* Storage unavailable — fall through to the light default. */
+        if (prefersDark) {
+          document.documentElement.classList.add('dark')
         }
-      })()
+      } catch {
+        /* Storage blocked or corrupt — Alpine settles the theme once it boots. */
+      }
     </script>
 
     <meta id="theme-color" name="theme-color" content="#FAFAFA" />
@@ -1030,7 +1025,6 @@
             aria-label="Markdown preview"
             class="markdown-preview prose max-w-[70ch] font-sans dark:prose-invert prose-code:font-mono prose-pre:font-mono prose-checkbox:mr-1 prose-checkbox:-mt-1 dark:checked:prose-checkbox:bg-[#111] prose-checkbox:text-black prose-checkbox:rounded prose-checkbox:size-5 dark:checked:prose-checkbox:bg-blue-600 dark:checked:prose-checkbox:border-blue-600 checked:prose-checkbox:bg-blue-500 checked:prose-checkbox:border-blue-500 prose-checkbox:border-[#EAEAEA] prose-checkbox:bg-white dark:prose-checkbox:border-[#333] dark:prose-checkbox:bg-[#111]"
             x-html="contentHtml"
-            @click="toggleTaskFromPreview($event)"
           ></article>
         </div>
       </div>
@@ -1073,9 +1067,9 @@
     <div
       x-data="tooltipLayer"
       @pointerover.window="showTooltip($event)"
-      @pointerout.window="hideTooltip"
+      @pointerout.window="hideTooltip($event)"
       @focusin.window="showTooltip($event)"
-      @focusout.window="hideTooltip"
+      @focusout.window="hideTooltip($event)"
       @scroll.window.capture="hideTooltip"
       @keydown.escape.window="hideTooltip"
       aria-hidden="true"
@@ -1120,7 +1114,7 @@
         '## Try it',
         '',
         '- [x] Type in the left pane',
-        '- [ ] Tick this box — it writes straight back to the markdown',
+        '- [ ] Use the toolbar, or the keyboard shortcuts behind it',
         '- [ ] Save a revision when you want a checkpoint',
         '',
         '## Syntax at a glance',
@@ -1152,9 +1146,6 @@
       /** Any block marker, stripped before a new one is applied so they don't nest. */
       const ANY_BLOCK_SYNTAX =
         /^(?:#{1,6} +|> +|[-*+] +\[[ xX]\] +|[-*+] +|\d+\. +)/
-
-      const TASK_LINE_PATTERN = /^(\s*[-*+] +\[)([ xX])(\] )/
-      const FENCE_LINE_PATTERN = /^\s*(?:```|~~~)/
 
       /**
        * Render bookkeeping lives outside the Alpine component so writing to it
@@ -1439,55 +1430,6 @@
           }
         },
 
-        /**
-         * Flips the nth task checkbox between - [ ] and - [x]
-         * @param {string} markdownContent - Full editor content
-         * @param {number} targetTaskIndex - Zero-based index of the checkbox clicked in the preview
-         * @returns {string} Markdown with that one task toggled
-         * @description
-         * Counts task lines in source order, skipping fenced code blocks so a
-         * checkbox written inside an example doesn't shift the mapping.
-         */
-        toggleTaskAtIndex(markdownContent, targetTaskIndex) {
-          let isInsideFence = false
-          let taskIndex = -1
-
-          const updatedLines = markdownContent
-            .split('\n')
-            .map((contentLine) => {
-              if (FENCE_LINE_PATTERN.test(contentLine)) {
-                isInsideFence = !isInsideFence
-
-                return contentLine
-              }
-
-              if (isInsideFence) {
-                return contentLine
-              }
-
-              const taskMatch = contentLine.match(TASK_LINE_PATTERN)
-
-              if (!taskMatch) {
-                return contentLine
-              }
-
-              taskIndex += 1
-
-              if (taskIndex !== targetTaskIndex) {
-                return contentLine
-              }
-
-              const [matchedPrefix, openBracket, currentMarker, closeBracket] =
-                taskMatch
-
-              const toggledMarker = currentMarker === ' ' ? 'x' : ' '
-
-              return `${openBracket}${toggledMarker}${closeBracket}${contentLine.slice(matchedPrefix.length)}`
-            })
-
-          return updatedLines.join('\n')
-        },
-
         enforceSizeLimit(markdownContent) {
           if (markdownContent.length <= MAX_MARKDOWN_SIZE) {
             return {
@@ -1629,21 +1571,6 @@
         },
       }
 
-      /**
-       * Marked renders task checkboxes as disabled inputs. Dropping the attribute
-       * is what makes them clickable in the preview; the click handler is what
-       * writes the change back to the markdown.
-       */
-      DOMPurify.addHook('afterSanitizeAttributes', (sanitizedNode) => {
-        const isTaskCheckbox =
-          sanitizedNode.nodeName === 'INPUT' &&
-          sanitizedNode.getAttribute('type') === 'checkbox'
-
-        if (isTaskCheckbox) {
-          sanitizedNode.removeAttribute('disabled')
-        }
-      })
-
       document.addEventListener('alpine:init', () => {
         /**
          * Single shared tooltip for every icon-only control
@@ -1686,7 +1613,25 @@
             this.$nextTick(() => this.positionTooltip(tooltipHost))
           },
 
-          hideTooltip() {
+          /**
+           * Hides the tooltip, ignoring moves within the trigger it belongs to
+           * @param {PointerEvent|FocusEvent} [leaveEvent] - Omitted for scroll and Escape
+           * @description
+           * `pointerout` and `focusout` also fire when the pointer or focus
+           * crosses into a descendant of the trigger — its `<svg>`, say — which
+           * would flicker the tooltip off and straight back on.
+           */
+          hideTooltip(leaveEvent) {
+            const tooltipHost = leaveEvent?.target?.closest?.('[data-tooltip]')
+
+            const stayedWithinHost =
+              leaveEvent?.relatedTarget instanceof Node &&
+              tooltipHost?.contains(leaveEvent.relatedTarget)
+
+            if (stayedWithinHost) {
+              return
+            }
+
             this.isVisible = false
           },
 
@@ -1702,7 +1647,7 @@
               hostBounds.left + hostBounds.width / 2 - tooltipBounds.width / 2
 
             const furthestLeft =
-              window.innerWidth - tooltipBounds.width - TOOLTIP_EDGE_GAP
+              globalThis.innerWidth - tooltipBounds.width - TOOLTIP_EDGE_GAP
 
             this.tooltipLeft = Math.round(
               Math.min(
@@ -1715,7 +1660,7 @@
 
             const fitsBelow =
               topWhenBelow + tooltipBounds.height <=
-              window.innerHeight - TOOLTIP_EDGE_GAP
+              globalThis.innerHeight - TOOLTIP_EDGE_GAP
 
             this.tooltipTop = Math.round(
               fitsBelow
@@ -1762,7 +1707,6 @@
          *
          * Features:
          * - Live HTML preview with XSS protection (DOMPurify sanitization)
-         * - Clickable preview checkboxes that write back to the markdown source
          * - Revision history saved to localStorage with timestamps
          * - Dark mode toggle with persistent user preference
          * - Toolbar with markdown formatting shortcuts
@@ -1964,51 +1908,6 @@
           },
 
           /**
-           * Toggles the markdown task that backs a clicked preview checkbox
-           * @param {MouseEvent} clickEvent - Click from anywhere in the preview
-           * @description
-           * Maps the checkbox's position in the preview onto the matching task line
-           * in the source, so ticking a box in the preview edits the markdown.
-           */
-          toggleTaskFromPreview(clickEvent) {
-            const checkboxElement = clickEvent.target
-
-            const isTaskCheckbox =
-              checkboxElement instanceof HTMLInputElement &&
-              checkboxElement.type === 'checkbox'
-
-            if (!isTaskCheckbox) {
-              return
-            }
-
-            const taskIndex =
-              this.listTaskCheckboxes().indexOf(checkboxElement)
-
-            if (taskIndex < 0) {
-              return
-            }
-
-            this.contentMarkdown = markdownService.toggleTaskAtIndex(
-              this.contentMarkdown,
-              taskIndex,
-            )
-          },
-
-          /**
-           * Lists preview checkboxes in document order
-           * @returns {HTMLInputElement[]}
-           */
-          listTaskCheckboxes() {
-            const previewElement = this.$refs.preview
-
-            return previewElement
-              ? Array.from(
-                  previewElement.querySelectorAll('input[type="checkbox"]'),
-                )
-              : []
-          },
-
-          /**
            * Copies current markdown content to clipboard
            * @description Shows success notification on copy and error notification on failure.
            */
@@ -2179,8 +2078,8 @@
            * @description
            * Tracked by x-effect, so it reads contentMarkdown synchronously and then
            * debounces the actual parse. Without the debounce every keystroke reparses
-           * and rebuilds the whole preview, which is the difference between a
-           * checkbox click feeling instant and feeling like a page reload.
+           * and rebuilds the whole preview, which is the difference between typing
+           * feeling instant and feeling like it is fighting the page.
            */
           refreshHtml() {
             const markdownContent = this.contentMarkdown
@@ -2208,13 +2107,12 @@
            * Uses marked.js to convert markdown to HTML and sanitizes output with DOMPurify
            * to prevent XSS attacks. If parsing fails, uses a strict DOMPurify allowlist
            * to render the raw markdown content as sanitized fallback output.
-           * Preserves preview scroll position and checkbox focus across the swap, and
-           * only warns when the document first fails to parse rather than on every keystroke.
+           * Preserves preview scroll position across the swap, and only warns when
+           * the document first fails to parse rather than on every keystroke.
            */
           renderHtml(markdownContent) {
             const previewElement = this.$refs.preview
             const previousScrollTop = previewElement?.scrollTop ?? 0
-            const focusedTaskIndex = this.findFocusedTaskIndex()
 
             const renderedMarkdown =
               markdownService.renderSanitizedHtml(markdownContent)
@@ -2236,36 +2134,7 @@
                   previewElement.scrollTop = previousScrollTop
                 })
               }
-
-              this.restoreTaskFocus(focusedTaskIndex)
             })
-          },
-
-          /**
-           * Finds which preview checkbox currently has focus
-           * @returns {number} Index of the focused checkbox, or -1
-           */
-          findFocusedTaskIndex() {
-            const previewElement = this.$refs.preview
-
-            if (!previewElement?.contains(document.activeElement)) {
-              return -1
-            }
-
-            return this.listTaskCheckboxes().indexOf(document.activeElement)
-          },
-
-          /**
-           * Restores focus to a checkbox after the preview is rebuilt
-           * @param {number} taskIndex - Index returned by findFocusedTaskIndex
-           * @description Keeps the keyboard path usable, since x-html discards the focused node.
-           */
-          restoreTaskFocus(taskIndex) {
-            if (taskIndex < 0) {
-              return
-            }
-
-            this.listTaskCheckboxes()[taskIndex]?.focus()
           },
 
           /**
@@ -2296,7 +2165,7 @@
               return
             }
 
-            if (!window.matchMedia(DESKTOP_MEDIA_QUERY).matches) {
+            if (!globalThis.matchMedia(DESKTOP_MEDIA_QUERY).matches) {
               return
             }
 
