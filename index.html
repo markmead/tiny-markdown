@@ -78,6 +78,59 @@
         color: var(--accent);
       }
 
+      /*
+        Tooltips for icon-only controls. Every trigger shares one anchor name;
+        anchor-scope confines each to its own subtree so a button's tooltip
+        anchors to that button rather than to the last one in the document.
+        position: fixed keeps them out of the toolbar's horizontal scroll
+        container, which would otherwise clip them.
+
+        Guarded because without anchor positioning these would pile up in the
+        viewport's top-left corner. Losing them costs nothing for assistive
+        tech: every trigger carries its own aria-label.
+      */
+      @supports (anchor-scope: --tooltip) {
+        [data-tooltip] {
+          anchor-name: --tooltip;
+          anchor-scope: --tooltip;
+        }
+
+        [data-tooltip]::after {
+          content: attr(data-tooltip);
+          position: fixed;
+          position-anchor: --tooltip;
+          position-area: block-end;
+          position-try-fallbacks: flip-block;
+          justify-self: anchor-center;
+          z-index: 50;
+          margin: 8px;
+          padding: 0.25rem 0.5rem;
+          border: 1px solid var(--border);
+          border-radius: 0.375rem;
+          background: var(--surface);
+          box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+          color: var(--ink);
+          font-size: 0.75rem;
+          font-weight: 500;
+          line-height: 1rem;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 120ms ease;
+        }
+
+        /* Hover-only devices, so a tap does not leave a tooltip stuck open. */
+        @media (hover: hover) {
+          [data-tooltip]:hover::after {
+            opacity: 1;
+          }
+        }
+
+        [data-tooltip]:focus-visible::after {
+          opacity: 1;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -1059,32 +1112,6 @@
       </template>
     </div>
 
-    <!--
-      One shared tooltip, positioned fixed so it escapes the toolbar's
-      horizontal scroll container. Hidden from assistive tech because every
-      trigger already carries an aria-label.
-    -->
-    <div
-      x-data="tooltipLayer"
-      @pointerover.window="showTooltip($event)"
-      @pointerout.window="hideTooltip($event)"
-      @focusin.window="showTooltip($event)"
-      @focusout.window="hideTooltip($event)"
-      @scroll.window.capture="hideTooltip"
-      @keydown.escape.window="hideTooltip"
-      aria-hidden="true"
-    >
-      <div
-        x-ref="tooltip"
-        x-show="isVisible"
-        x-cloak
-        x-transition.opacity.duration.120ms
-        :style="`left: ${tooltipLeft}px; top: ${tooltipTop}px;`"
-        class="fixed z-50 px-2 py-1 text-xs font-medium border rounded-md shadow-sm pointer-events-none whitespace-nowrap bg-surface border-line text-ink"
-        x-text="tooltipText"
-      ></div>
-    </div>
-
     <script>
       const REVISION_PREFIX = '_TM_'
       const NOTIFICATION_DURATION = 2500
@@ -1095,8 +1122,6 @@
       const RENDER_DEBOUNCE = 100
       const INDENT = '  '
       const OUTDENT_PATTERN = /^ {1,2}/
-      const TOOLTIP_OFFSET = 8
-      const TOOLTIP_EDGE_GAP = 8
       const NEAR_SIZE_LIMIT_RATIO = 0.9
       const DESKTOP_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -1572,104 +1597,6 @@
       }
 
       document.addEventListener('alpine:init', () => {
-        /**
-         * Single shared tooltip for every icon-only control
-         * @description
-         * Uses one fixed-position element driven by delegated pointer and focus
-         * events, so tooltips are not clipped by the toolbar's horizontal scroll
-         * container and cost nothing per button beyond a data-tooltip attribute.
-         * Skips touch pointers and non-keyboard focus.
-         */
-        Alpine.data('tooltipLayer', () => ({
-          tooltipText: '',
-          isVisible: false,
-          tooltipLeft: 0,
-          tooltipTop: 0,
-
-          showTooltip(triggerEvent) {
-            if (triggerEvent.pointerType === 'touch') {
-              return
-            }
-
-            const tooltipHost = triggerEvent.target.closest?.('[data-tooltip]')
-
-            if (!tooltipHost) {
-              this.hideTooltip()
-
-              return
-            }
-
-            const isNonKeyboardFocus =
-              triggerEvent.type === 'focusin' &&
-              !tooltipHost.matches(':focus-visible')
-
-            if (isNonKeyboardFocus) {
-              return
-            }
-
-            this.tooltipText = tooltipHost.dataset.tooltip
-            this.isVisible = true
-
-            this.$nextTick(() => this.positionTooltip(tooltipHost))
-          },
-
-          /**
-           * Hides the tooltip, ignoring moves within the trigger it belongs to
-           * @param {PointerEvent|FocusEvent} [leaveEvent] - Omitted for scroll and Escape
-           * @description
-           * `pointerout` and `focusout` also fire when the pointer or focus
-           * crosses into a descendant of the trigger — its `<svg>`, say — which
-           * would flicker the tooltip off and straight back on.
-           */
-          hideTooltip(leaveEvent) {
-            const tooltipHost = leaveEvent?.target?.closest?.('[data-tooltip]')
-
-            const stayedWithinHost =
-              leaveEvent?.relatedTarget instanceof Node &&
-              tooltipHost?.contains(leaveEvent.relatedTarget)
-
-            if (stayedWithinHost) {
-              return
-            }
-
-            this.isVisible = false
-          },
-
-          /**
-           * Centres the tooltip under its trigger, flipping above and clamping
-           * to the viewport when there isn't room.
-           */
-          positionTooltip(tooltipHost) {
-            const hostBounds = tooltipHost.getBoundingClientRect()
-            const tooltipBounds = this.$refs.tooltip.getBoundingClientRect()
-
-            const centredLeft =
-              hostBounds.left + hostBounds.width / 2 - tooltipBounds.width / 2
-
-            const furthestLeft =
-              globalThis.innerWidth - tooltipBounds.width - TOOLTIP_EDGE_GAP
-
-            this.tooltipLeft = Math.round(
-              Math.min(
-                Math.max(centredLeft, TOOLTIP_EDGE_GAP),
-                Math.max(furthestLeft, TOOLTIP_EDGE_GAP),
-              ),
-            )
-
-            const topWhenBelow = hostBounds.bottom + TOOLTIP_OFFSET
-
-            const fitsBelow =
-              topWhenBelow + tooltipBounds.height <=
-              globalThis.innerHeight - TOOLTIP_EDGE_GAP
-
-            this.tooltipTop = Math.round(
-              fitsBelow
-                ? topWhenBelow
-                : hostBounds.top - tooltipBounds.height - TOOLTIP_OFFSET,
-            )
-          },
-        }))
-
         /**
          * Edge fades for the horizontally scrolling toolbar
          * @description
