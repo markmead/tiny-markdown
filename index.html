@@ -1,13 +1,177 @@
 <!doctype html>
 <html
   lang="en"
-  x-data="{ darkMode: $persist(window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+  x-data="{ darkMode: $persist(globalThis.matchMedia('(prefers-color-scheme: dark)').matches) }"
   :class="{ 'dark': darkMode }"
+  x-effect="document.getElementById('theme-color').content = darkMode ? '#0B0B0B' : '#FAFAFA'"
 >
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tiny Markdown 🤏 | Simple Markdown Editor</title>
+
+    <!--
+      Design tokens. Every surface colour resolves through these, so the
+      `dark` class on <html> is the only thing that switches the theme.
+
+      Elevation reads the same way in both themes: raised surfaces are
+      lighter than the page they sit on.
+    -->
+    <style>
+      :root {
+        --page: #fafafa;
+        --paper: #ffffff;
+        --surface: #ffffff;
+        --border: #d8d8d8;
+        --hover: #f1f1f1;
+        --active: #e7e7e7;
+        --ink: #141414;
+        --ink-muted: #5c5c5c;
+        --accent: #db2777;
+        --danger: #dc2626;
+
+        color-scheme: light;
+      }
+
+      .dark {
+        --page: #0b0b0b;
+        --paper: #131313;
+        --surface: #171717;
+        --border: #363636;
+        --hover: #232323;
+        --active: #2b2b2b;
+        --ink: #f2f2f2;
+        --ink-muted: #9e9e9e;
+        --accent: #f472b6;
+        --danger: #f87171;
+
+        color-scheme: dark;
+      }
+
+      /*
+        Alpine's x-cloak is inert without this rule. Kept inline rather than
+        in Tailwind so it applies before any script has run.
+      */
+      [x-cloak] {
+        display: none !important;
+      }
+
+      .no-scrollbar {
+        scrollbar-width: none;
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      /*
+        Preview styling lives here rather than in prose-* utilities so it can
+        beat the typography plugin's :where() selectors without !important.
+      */
+      .markdown-preview pre {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--ink);
+      }
+
+      .markdown-preview a {
+        color: var(--accent);
+      }
+
+      /*
+        Tooltips for icon-only controls. Every trigger shares one anchor name;
+        anchor-scope confines each to its own subtree so a button's tooltip
+        anchors to that button rather than to the last one in the document.
+        position: fixed keeps them out of the toolbar's horizontal scroll
+        container, which would otherwise clip them.
+
+        Guarded because without anchor positioning these would pile up in the
+        viewport's top-left corner. Losing them costs nothing for assistive
+        tech: every trigger carries its own aria-label.
+      */
+      @supports (anchor-scope: --tooltip) {
+        [data-tooltip] {
+          anchor-name: --tooltip;
+          anchor-scope: --tooltip;
+        }
+
+        [data-tooltip]::after {
+          content: attr(data-tooltip);
+          position: fixed;
+          position-anchor: --tooltip;
+          position-area: block-end;
+          position-try-fallbacks: flip-block;
+          justify-self: anchor-center;
+          z-index: 50;
+          margin: 8px;
+          padding: 0.25rem 0.5rem;
+          border: 1px solid var(--border);
+          border-radius: 0.375rem;
+          background: var(--surface);
+          box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+          color: var(--ink);
+          font-size: 0.75rem;
+          font-weight: 500;
+          line-height: 1rem;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 120ms ease;
+        }
+
+        /* Hover-only devices, so a tap does not leave a tooltip stuck open. */
+        @media (hover: hover) {
+          [data-tooltip]:hover::after {
+            opacity: 1;
+          }
+        }
+
+        [data-tooltip]:focus-visible::after {
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+
+    <!--
+      Blocking so the persisted theme lands before first paint. Alpine loads
+      deferred from a CDN, so its `dark` binding only applies once the page has
+      already flashed light. Reads Alpine Persist's `_x_` localStorage key.
+      Everything else about the theme, theme-color included, stays Alpine's.
+    -->
+    <script>
+      try {
+        const storedPreference = localStorage.getItem('_x_darkMode')
+
+        const prefersDark =
+          storedPreference === null
+            ? globalThis.matchMedia('(prefers-color-scheme: dark)').matches
+            : JSON.parse(storedPreference)
+
+        if (prefersDark) {
+          document.documentElement.classList.add('dark')
+        }
+      } catch {
+        /* Storage blocked or corrupt — Alpine settles the theme once it boots. */
+      }
+    </script>
+
+    <meta id="theme-color" name="theme-color" content="#FAFAFA" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inconsolata:wght@200..900&display=swap"
+      rel="stylesheet"
+    />
 
     <link
       rel="icon"
@@ -69,13 +233,21 @@
       crossorigin="anonymous"
     ></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/slugify@1.6/slugify.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/slugify@1.6.9/slugify.min.js"
+      integrity="sha256-UihlZwuxD7CK3PUx1p/+/QFj/te+wOyCVAehLNCXoN8="
+      crossorigin="anonymous"
+    ></script>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
       tailwind.config = {
         darkMode: 'class',
         plugins: [
+          /*
+            Preview HTML is injected by marked, so its checkboxes can't carry
+            classes. This variant lets utilities on the article reach them.
+          */
           function ({ addVariant }) {
             addVariant(
               'prose-checkbox',
@@ -83,14 +255,61 @@
             )
           },
         ],
+        theme: {
+          extend: {
+            colors: {
+              page: 'var(--page)',
+              paper: 'var(--paper)',
+              surface: 'var(--surface)',
+              line: 'var(--border)',
+              hover: 'var(--hover)',
+              active: 'var(--active)',
+              ink: 'var(--ink)',
+              'ink-muted': 'var(--ink-muted)',
+              accent: 'var(--accent)',
+              danger: 'var(--danger)',
+            },
+            fontFamily: {
+              sans: [
+                'Bricolage Grotesque',
+                'ui-sans-serif',
+                'system-ui',
+                'sans-serif',
+              ],
+              mono: [
+                'Inconsolata',
+                'ui-monospace',
+                'SFMono-Regular',
+                'Menlo',
+                'Consolas',
+                'monospace',
+              ],
+            },
+          },
+        },
       }
     </script>
   </head>
   <body
     x-data="markdownEditor"
     x-effect="refreshHtml"
-    class="dark:bg-[#111] bg-[#FAFAFA]"
+    class="font-sans bg-page text-ink"
   >
+    <noscript>
+      <div
+        style="
+          padding: 1.5rem;
+          font-family: system-ui, sans-serif;
+          font-size: 0.875rem;
+          line-height: 1.6;
+        "
+      >
+        <strong>Tiny Markdown needs JavaScript.</strong> The editor and preview
+        both render in the browser, so there is nothing to show without it.
+        Enable JavaScript and reload to start writing.
+      </div>
+    </noscript>
+
     <main>
       <div
         class="grid min-h-screen grid-cols-1 lg:grid-cols-2 lg:align-start"
@@ -98,12 +317,12 @@
       >
         <div
           class="flex flex-col px-4 py-8 overflow-auto sm:px-6 lg:px-8 lg:py-12 lg:h-screen"
-          :class="{ 'max-w-5xl mx-auto w-full': isFullscreen }"
+          :class="{ 'lg:max-w-5xl lg:mx-auto lg:w-full': isFullscreen }"
         >
           <div
             class="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between"
           >
-            <h1 class="text-lg font-bold dark:text-white">
+            <h1 class="text-lg font-bold">
               Tiny Markdown
               <span aria-hidden="true"> 🤏 </span>
             </h1>
@@ -119,7 +338,8 @@
                     aria-haspopup="menu"
                     :aria-expanded="showRevisionMenu"
                     aria-controls="revision-menu"
-                    aria-label="Open revision history"
+                    aria-label="Revision history"
+                    data-tooltip="Revision history"
                     :class="menuTriggerButtonClass"
                   >
                     <span
@@ -136,6 +356,7 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       class="size-4"
+                      aria-hidden="true"
                     >
                       <path d="m6 9 6 6 6-6" />
                     </svg>
@@ -143,8 +364,7 @@
 
                   <div
                     id="revision-menu"
-                    class="absolute right-0 z-10 w-56 mt-4 origin-top-right border rounded-md max-h-56 overflow-auto"
-                    :class="surfacePanelClass"
+                    class="absolute right-0 z-10 w-64 mt-4 origin-top-right border rounded-md max-h-64 overflow-auto bg-surface border-line"
                     role="menu"
                     aria-labelledby="revision-menu-button"
                     x-show="showRevisionMenu"
@@ -159,21 +379,24 @@
                           :key="contentRevision.revisionKey"
                         >
                           <li
-                            class="flex justify-between p-2 items-center font-medium hover:dark:bg-[#111] hover:bg-[#FAFAFA] rounded-md"
+                            class="flex justify-between gap-2 p-1 items-center rounded-md hover:bg-hover"
                             role="none"
                           >
                             <button
                               @click="selectRevision(contentRevision.revisionKey, contentRevision.revisionLabel)"
                               role="menuitem"
-                              class="leading-none transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500 text-xs font-medium"
+                              :aria-current="contentRevision.revisionKey === selectedRevisionKey"
+                              class="flex-1 px-2 py-1 text-left rounded-md text-xs font-medium transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                              :class="contentRevision.revisionKey === selectedRevisionKey ? 'text-accent' : ''"
                               x-text="contentRevision.revisionLabel"
                             ></button>
 
                             <button
                               @click="removeRevision(contentRevision.revisionKey)"
                               role="menuitem"
-                              aria-label="Delete revision"
-                              class="transition hover:text-pink-500 focus:outline-none focus:text-pink-500 focus:dark:text-pink-500"
+                              :aria-label="`Delete revision from ${contentRevision.revisionLabel}`"
+                              data-tooltip="Delete revision"
+                              class="grid p-1 rounded-md size-7 place-content-center transition-colors hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -184,6 +407,7 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 class="size-4"
+                                aria-hidden="true"
                               >
                                 <path d="M10 11v6" />
                                 <path d="M14 11v6" />
@@ -202,21 +426,16 @@
                     </template>
 
                     <template x-if="! contentRevisions.length">
-                      <div
-                        class="p-4 text-xs font-medium dark:text-white text-black text-center"
-                      >
-                        Nothing to see here...
-                      </div>
+                      <p class="p-4 text-xs font-medium text-ink-muted">
+                        No saved revisions yet. Save one to come back to it.
+                      </p>
                     </template>
 
-                    <div
-                      class="p-2 border-t border-[#EAEAEA] dark:border-[#333]"
-                    >
+                    <div x-show="contentRevisions.length" class="p-2 border-t border-line">
                       <button
-                        class="flex items-center gap-2 p-2 text-red-600 transition font-medium focus:outline-none focus:ring-1 focus:ring-pink-500 hover:border-pink-500 focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset hover:dark:bg-[#111] w-full rounded-md hover:bg-[#FAFAFA]"
+                        class="flex items-center gap-2 p-2 w-full rounded-md text-xs font-medium text-danger transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
                         @click="removeAllRevisions"
                         role="menuitem"
-                        aria-label="Delete all revisions"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -227,6 +446,7 @@
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           class="size-4"
+                          aria-hidden="true"
                         >
                           <path d="M10 11v6" />
                           <path d="M14 11v6" />
@@ -235,17 +455,16 @@
                           <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
 
-                        <span class="text-xs font-medium">
-                          Delete Revisions
-                        </span>
+                        Delete all revisions
                       </button>
                     </div>
                   </div>
                 </div>
 
                 <button
-                  @click="saveRevision"
+                  @click="saveRevisionManually"
                   aria-label="Save revision"
+                  data-tooltip="Save revision"
                   :class="toolbarButtonClass"
                 >
                   <svg
@@ -257,6 +476,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     class="size-4"
+                    aria-hidden="true"
                   >
                     <path
                       d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"
@@ -268,7 +488,8 @@
               <div :class="toolbarGroupClass">
                 <button
                   @click="darkMode = !darkMode"
-                  aria-label="Toggle dark mode"
+                  :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+                  :data-tooltip="darkMode ? 'Light mode' : 'Dark mode'"
                   :class="toolbarButtonClass"
                 >
                   <svg
@@ -282,6 +503,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     class="size-4"
+                    aria-hidden="true"
                   >
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v2" />
@@ -305,6 +527,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     class="size-4"
+                    aria-hidden="true"
                   >
                     <path
                       d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
@@ -315,7 +538,8 @@
                 <div class="hidden lg:block">
                   <button
                     @click="toggleFullscreen"
-                    aria-label="Toggle full screen mode"
+                    :aria-label="isFullscreen ? 'Show preview' : 'Hide preview'"
+                    :data-tooltip="isFullscreen ? 'Show preview' : 'Hide preview'"
                     :class="toolbarButtonClass"
                   >
                     <svg
@@ -329,6 +553,7 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       class="size-4"
+                      aria-hidden="true"
                     >
                       <path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8" />
                       <path d="M9 19.8V15m0 0H4.2M9 15l-6 6" />
@@ -347,6 +572,7 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       class="size-4"
+                      aria-hidden="true"
                     >
                       <path d="m15 15 6 6" />
                       <path d="m15 9 6-6" />
@@ -363,84 +589,338 @@
             </div>
           </div>
 
-          <div
-            class="flex justify-between gap-4 overflow-auto [&::-webkit-scrollbar]:hidden mt-4"
-          >
-            <div class="flex gap-4">
-              <div :class="toolbarGroupClass">
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('# ')"
-                  aria-label="Heading one"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
+          <div x-data="scrollFade" class="relative mt-4">
+            <div
+              x-ref="scroller"
+              @scroll="updateScrollState"
+              class="flex justify-between gap-4 overflow-x-auto no-scrollbar"
+            >
+              <div class="flex gap-4">
+                <div :class="toolbarGroupClass">
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('# ')"
+                    aria-label="Heading 1"
+                    data-tooltip="Heading 1"
                   >
-                    <path d="M4 12h8" />
-                    <path d="M4 18V6" />
-                    <path d="M12 18V6" />
-                    <path d="m17 12 3-2v8" />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12h8" />
+                      <path d="M4 18V6" />
+                      <path d="M12 18V6" />
+                      <path d="m17 12 3-2v8" />
+                    </svg>
+                  </button>
 
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('## ')"
-                  aria-label="Heading two"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('## ')"
+                    aria-label="Heading 2"
+                    data-tooltip="Heading 2"
                   >
-                    <path d="M4 12h8" />
-                    <path d="M4 18V6" />
-                    <path d="M12 18V6" />
-                    <path d="M21 18h-4c0-4 4-3 4-6 0-1.5-2-2.5-4-1" />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12h8" />
+                      <path d="M4 18V6" />
+                      <path d="M12 18V6" />
+                      <path d="M21 18h-4c0-4 4-3 4-6 0-1.5-2-2.5-4-1" />
+                    </svg>
+                  </button>
 
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('### ')"
-                  aria-label="Heading three"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('### ')"
+                    aria-label="Heading 3"
+                    data-tooltip="Heading 3"
                   >
-                    <path d="M4 12h8" />
-                    <path d="M4 18V6" />
-                    <path d="M12 18V6" />
-                    <path d="M17.5 10.5c1.7-1 3.5 0 3.5 1.5a2 2 0 0 1-2 2" />
-                    <path d="M17 17.5c2 1.5 4 .3 4-1.5a2 2 0 0 0-2-2" />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12h8" />
+                      <path d="M4 18V6" />
+                      <path d="M12 18V6" />
+                      <path d="M17.5 10.5c1.7-1 3.5 0 3.5 1.5a2 2 0 0 1-2 2" />
+                      <path d="M17 17.5c2 1.5 4 .3 4-1.5a2 2 0 0 0-2-2" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div :class="toolbarGroupClass">
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('**', '**')"
+                    aria-label="Bold"
+                    :data-tooltip="'Bold ' + shortcutModifier + 'B'"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('_', '_')"
+                    aria-label="Italic"
+                    :data-tooltip="'Italic ' + shortcutModifier + 'I'"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <line x1="19" x2="10" y1="4" y2="4" />
+                      <line x1="14" x2="5" y1="20" y2="20" />
+                      <line x1="15" x2="9" y1="4" y2="20" />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('~~', '~~')"
+                    aria-label="Strikethrough"
+                    data-tooltip="Strikethrough"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M16 4H9a3 3 0 0 0-2.83 4" />
+                      <path d="M14 12a4 4 0 0 1 0 8H6" />
+                      <line x1="4" x2="20" y1="12" y2="12" />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('- ')"
+                    aria-label="Bullet list"
+                    data-tooltip="Bullet list"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 5h.01" />
+                      <path d="M3 12h.01" />
+                      <path d="M3 19h.01" />
+                      <path d="M8 5h13" />
+                      <path d="M8 12h13" />
+                      <path d="M8 19h13" />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('1. ')"
+                    aria-label="Numbered list"
+                    data-tooltip="Numbered list"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M11 5h10" />
+                      <path d="M11 12h10" />
+                      <path d="M11 19h10" />
+                      <path d="M4 4h1v5" />
+                      <path d="M4 9h2" />
+                      <path
+                        d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('> ')"
+                    aria-label="Quote"
+                    data-tooltip="Quote"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M17 5H3" />
+                      <path d="M21 12H8" />
+                      <path d="M21 19H8" />
+                      <path d="M3 12v7" />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('- [ ] ')"
+                    aria-label="Task list"
+                    data-tooltip="Task list"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M13 5h8" />
+                      <path d="M13 12h8" />
+                      <path d="M13 19h8" />
+                      <path d="m3 17 2 2 4-4" />
+                      <rect x="3" y="4" width="6" height="6" rx="1" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div :class="toolbarGroupClass">
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('`', '`')"
+                    aria-label="Inline code"
+                    data-tooltip="Inline code"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="m16 18 6-6-6-6" />
+                      <path d="m8 6-6 6 6 6" />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('```', '```')"
+                    aria-label="Code block"
+                    data-tooltip="Code block"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2" />
+                      <path d="m10 8 4 4-4 4" />
+                    </svg>
+                  </button>
+
+                  <button
+                    :class="toolbarButtonClass"
+                    @click="modifyMarkdown('![](', ')')"
+                    aria-label="Image"
+                    data-tooltip="Image"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="size-4"
+                      aria-hidden="true"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                      <circle cx="9" cy="9" r="2" />
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               <div :class="toolbarGroupClass">
                 <button
                   :class="toolbarButtonClass"
-                  @click="modifyMarkdown('**', '**')"
-                  aria-label="Bold text"
+                  @click="exportMarkdownDocument"
+                  aria-label="Export markdown"
+                  data-tooltip="Export as .md"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -451,17 +931,46 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     class="size-4"
+                    aria-hidden="true"
                   >
                     <path
-                      d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"
+                      d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                    />
+                    <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                    <path d="M12 18v-6" />
+                    <path d="m9 15 3 3 3-3" />
+                  </svg>
+                </button>
+
+                <button
+                  :class="toolbarButtonClass"
+                  @click="copyMarkdown"
+                  aria-label="Copy markdown"
+                  data-tooltip="Copy markdown"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="size-4"
+                    aria-hidden="true"
+                  >
+                    <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                    <path
+                      d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
                     />
                   </svg>
                 </button>
 
                 <button
                   :class="toolbarButtonClass"
-                  @click="modifyMarkdown('_', '_')"
-                  aria-label="Italic text"
+                  @click="startOver"
+                  aria-label="Start over"
+                  data-tooltip="Start over"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -472,291 +981,75 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     class="size-4"
+                    aria-hidden="true"
                   >
-                    <line x1="19" x2="10" y1="4" y2="4" />
-                    <line x1="14" x2="5" y1="20" y2="20" />
-                    <line x1="15" x2="9" y1="4" y2="20" />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('~~', '~~')"
-                  aria-label="Strikethrough text"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <path d="M16 4H9a3 3 0 0 0-2.83 4" />
-                    <path d="M14 12a4 4 0 0 1 0 8H6" />
-                    <line x1="4" x2="20" y1="12" y2="12" />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('- ')"
-                  aria-label="Bullet point"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <path d="M11 5h10" />
-                    <path d="M11 12h10" />
-                    <path d="M11 19h10" />
-                    <path d="M4 4h1v5" />
-                    <path d="M4 9h2" />
-                    <path
-                      d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('1. ')"
-                  aria-label="Numbered list"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <path d="M11 5h10" />
-                    <path d="M11 12h10" />
-                    <path d="M11 19h10" />
-                    <path d="M4 4h1v5" />
-                    <path d="M4 9h2" />
-                    <path
-                      d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('> ')"
-                  aria-label="Quote text"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <path d="M17 5H3" />
-                    <path d="M21 12H8" />
-                    <path d="M21 19H8" />
-                    <path d="M3 12v7" />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('- [ ] ')"
-                  aria-label="Checkbox"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <rect width="18" height="18" x="3" y="3" rx="2" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg>
-                </button>
-              </div>
-
-              <div :class="toolbarGroupClass">
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('`', '`')"
-                  aria-label="Code text"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <path d="m16 18 6-6-6-6" />
-                    <path d="m8 6-6 6 6 6" />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('```', '```')"
-                  aria-label="Code block"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <rect width="18" height="18" x="3" y="3" rx="2" />
-                    <path d="m10 8 4 4-4 4" />
-                  </svg>
-                </button>
-
-                <button
-                  :class="toolbarButtonClass"
-                  @click="modifyMarkdown('![](', ')')"
-                  aria-label="Image"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="size-4"
-                  >
-                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                    <circle cx="9" cy="9" r="2" />
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            <div :class="toolbarGroupClass">
-              <button
-                :class="toolbarButtonClass"
-                @click="exportMarkdownDocument"
-                aria-label="Export markdown"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <path
-                    d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
-                  />
-                  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
-                  <path d="M12 18v-6" />
-                  <path d="m9 15 3 3 3-3" />
-                </svg>
-              </button>
+            <div
+              x-show="canScrollStart"
+              x-cloak
+              aria-hidden="true"
+              class="absolute inset-y-0 left-0 w-8 pointer-events-none bg-gradient-to-r from-page"
+            ></div>
 
-              <button
-                :class="toolbarButtonClass"
-                @click="copyMarkdown"
-                aria-label="Copy markdown"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                  <path
-                    d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-                  />
-                </svg>
-              </button>
-
-              <button
-                :class="toolbarButtonClass"
-                @click="refreshComponent"
-                aria-label="Delete markdown"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="size-4"
-                >
-                  <path d="M10 11v6" />
-                  <path d="M14 11v6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                  <path d="M3 6h18" />
-                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-              </button>
-            </div>
+            <div
+              x-show="canScrollEnd"
+              x-cloak
+              aria-hidden="true"
+              class="absolute inset-y-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-page"
+            ></div>
           </div>
 
           <div class="flex-1 mt-4">
             <label for="markdown-editor" class="sr-only">
-              Markdown editor input
+              Markdown source
             </label>
 
             <textarea
               id="markdown-editor"
-              aria-label="Markdown editor input"
-              class="size-full rounded-xl p-6 resize-none focus:border-pink-500 focus:dark:border-pink-500 focus:ring-inset focus:outline-none focus:ring-1 focus:ring-pink-500"
-              :class="surfacePanelClass"
+              class="size-full p-6 font-mono text-sm leading-relaxed rounded-xl resize-none bg-surface border border-line text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
               x-model="contentMarkdown"
               @input="validateMarkdownSize"
               @input.debounce.20000ms="autoSaveRevision"
-              @keydown.cmd.b="modifyMarkdown('**', '**')"
-              @keydown.cmd.i="modifyMarkdown('_', '_')"
-              @keydown.ctrl.b="modifyMarkdown('**', '**')"
-              @keydown.ctrl.i="modifyMarkdown('_', '_')"
+              @scroll="syncPaneScroll($event.target, $refs.preview)"
+              @focus="isTabCaptured = true"
+              @keydown.tab="handleTabKey($event)"
+              @keydown.escape="isTabCaptured = false"
+              @keydown.cmd.b.prevent="modifyMarkdown('**', '**')"
+              @keydown.cmd.i.prevent="modifyMarkdown('_', '_')"
+              @keydown.ctrl.b.prevent="modifyMarkdown('**', '**')"
+              @keydown.ctrl.i.prevent="modifyMarkdown('_', '_')"
               x-ref="textarea"
+              spellcheck="true"
               placeholder="Enter markdown..."
             >
             </textarea>
           </div>
 
           <div
-            class="p-4 border rounded-lg text-xs font-medium hidden lg:flex lg:justify-between lg:items-center mt-4"
-            :class="surfacePanelClass"
+            class="flex flex-wrap items-center justify-between mt-2 text-xs font-medium gap-x-4 gap-y-1 text-ink-muted"
+          >
+            <p>
+              <span x-text="wordCount.toLocaleString()"></span> words
+              <span aria-hidden="true"> · </span>
+              <span :class="isNearSizeLimit ? 'text-danger' : ''">
+                <span x-text="characterCount.toLocaleString()"></span> /
+                <span x-text="characterLimitLabel"></span> characters
+              </span>
+            </p>
+
+            <p class="hidden sm:block">
+              Tab indents · Esc then Tab leaves the editor
+            </p>
+          </div>
+
+          <div
+            class="p-4 border rounded-lg text-xs font-medium hidden lg:flex lg:justify-between lg:items-center mt-4 bg-surface border-line"
           >
             <p> Created with a single HTML file. </p>
 
@@ -766,7 +1059,7 @@
                 href="https://github.com/markmead/tiny-markdown"
                 target="_blank"
                 rel="noreferrer"
-                class="inline-block underline transition focus:outline-none focus:text-pink-500 hover:text-pink-500"
+                class="inline-block underline transition-colors rounded hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 GitHub
               </a>
@@ -775,23 +1068,26 @@
         </div>
 
         <div
-          class="h-full px-4 py-8 overflow-auto bg-white lg:h-screen dark:bg-black sm:px-6 lg:px-8 lg:py-12"
-          :class="{ 'hidden': isFullscreen }"
+          x-ref="preview"
+          @scroll="syncPaneScroll($event.target, $refs.textarea)"
+          class="h-full px-4 py-8 overflow-auto lg:h-screen sm:px-6 lg:px-8 lg:py-12 bg-paper"
+          :class="{ 'lg:hidden': isFullscreen }"
         >
           <article
             role="region"
             aria-label="Markdown preview"
-            class="prose max-w-none dark:prose-invert dark:prose-pre:bg-[#111] prose-checkbox:mr-1 prose-checkbox:-mt-1 dark:checked:prose-checkbox:bg-[#111] prose-checkbox:text-black prose-checkbox:rounded prose-checkbox:size-5 dark:checked:prose-checkbox:bg-blue-600 dark:checked:prose-checkbox:border-blue-600 checked:prose-checkbox:bg-blue-500 checked:prose-checkbox:border-blue-500 prose-checkbox:border-[#EAEAEA] prose-checkbox:bg-white dark:prose-checkbox:border-[#333] dark:prose-checkbox:bg-[#111]"
+            class="markdown-preview prose max-w-[70ch] font-sans dark:prose-invert prose-code:font-mono prose-pre:font-mono prose-checkbox:mr-1 prose-checkbox:-mt-1 dark:checked:prose-checkbox:bg-[#111] prose-checkbox:text-black prose-checkbox:rounded prose-checkbox:size-5 dark:checked:prose-checkbox:bg-blue-600 dark:checked:prose-checkbox:border-blue-600 checked:prose-checkbox:bg-blue-500 checked:prose-checkbox:border-blue-500 prose-checkbox:border-[#EAEAEA] prose-checkbox:bg-white dark:prose-checkbox:border-[#333] dark:prose-checkbox:bg-[#111]"
             x-html="contentHtml"
           ></article>
         </div>
       </div>
     </main>
 
+    <!--
+      Always in the DOM so assistive tech has a live region to watch before
+      the first message lands.
+    -->
     <div
-      x-cloak
-      x-transition
-      x-show="notificationMessages.length"
       class="fixed inset-x-0 bottom-4 flex flex-col items-center gap-2 px-4 pointer-events-none"
     >
       <template
@@ -806,12 +1102,13 @@
           x-transition:leave="transform transition ease-in duration-150"
           x-transition:leave-start="translate-y-0 opacity-100 scale-100"
           x-transition:leave-end="translate-y-2 opacity-0 scale-95"
-          role="alert"
-          aria-live="assertive"
-          class="p-4 border rounded-lg text-sm font-medium pointer-events-auto"
-          :class="surfacePanelClass"
-          x-text="notificationMessage.textContent"
-        ></div>
+          :role="notificationMessage.isAssertive ? 'alert' : 'status'"
+          :aria-live="notificationMessage.isAssertive ? 'assertive' : 'polite'"
+          class="flex items-center gap-2 p-4 border rounded-lg text-sm font-medium pointer-events-auto bg-surface border-line text-ink"
+        >
+          <span aria-hidden="true" x-text="notificationMessage.iconText"></span>
+          <span x-text="notificationMessage.textContent"></span>
+        </div>
       </template>
     </div>
 
@@ -820,8 +1117,69 @@
       const NOTIFICATION_DURATION = 2500
       const NOTIFICATION_LEAVE_DURATION = 150
       const MAX_MARKDOWN_SIZE = 50000
-      const DEFAULT_REVISION_LABEL = 'Latest Revision'
+      const DEFAULT_REVISION_LABEL = 'Current draft'
       const DEFAULT_REVISION_KEY = null
+      const RENDER_DEBOUNCE = 100
+      const INDENT = '  '
+      const OUTDENT_PATTERN = /^ {1,2}/
+      const NEAR_SIZE_LIMIT_RATIO = 0.9
+      const DESKTOP_MEDIA_QUERY = '(min-width: 1024px)'
+
+      const IS_APPLE_DEVICE = /Mac|iPhone|iPad|iPod/.test(
+        navigator.platform || navigator.userAgent,
+      )
+
+      const SHORTCUT_MODIFIER = IS_APPLE_DEVICE ? '⌘' : 'Ctrl+'
+
+      const DEFAULT_MARKDOWN = [
+        '# Tiny Markdown',
+        '',
+        'A **single HTML file** that turns markdown into a document, live.',
+        '',
+        '## Try it',
+        '',
+        '- [x] Type in the left pane',
+        '- [ ] Use the toolbar, or the keyboard shortcuts behind it',
+        '- [ ] Save a revision when you want a checkpoint',
+        '',
+        '## Syntax at a glance',
+        '',
+        '| Write | Get |',
+        '| --- | --- |',
+        '| `**bold**` | **bold** |',
+        '| `_italic_` | _italic_ |',
+        '| `~~strike~~` | ~~strike~~ |',
+        '',
+        '> Everything stays in your browser. Nothing is uploaded.',
+      ].join('\n')
+
+      /**
+       * Line-start syntax, keyed by the marker each toolbar button inserts.
+       * The pattern decides whether a line already carries that syntax, which
+       * is what makes the buttons toggle rather than stack markers.
+       */
+      const BLOCK_SYNTAX_PATTERNS = {
+        '# ': /^# +/,
+        '## ': /^## +/,
+        '### ': /^### +/,
+        '- ': /^[-*+] +(?!\[[ xX]\] )/,
+        '1. ': /^\d+\. +/,
+        '> ': /^> +/,
+        '- [ ] ': /^[-*+] +\[[ xX]\] +/,
+      }
+
+      /** Any block marker, stripped before a new one is applied so they don't nest. */
+      const ANY_BLOCK_SYNTAX =
+        /^(?:#{1,6} +|> +|[-*+] +\[[ xX]\] +|[-*+] +|\d+\. +)/
+
+      /**
+       * Render bookkeeping lives outside the Alpine component so writing to it
+       * never re-triggers the x-effect that drives rendering.
+       */
+      let renderTimeoutId = null
+      let hasRenderedInitialHtml = false
+      let hasPreviewParseError = false
+      let isSyncingScroll = false
 
       const revisionStore = {
         saveEntry(markdownContent) {
@@ -888,30 +1246,213 @@
       }
 
       const markdownService = {
-        applySyntaxMarkers(
-          textBeforeSelection,
-          textAfterSelection,
-          selectedText,
-          syntaxBefore,
-          syntaxAfter = '',
+        /**
+         * Applies or removes line-start syntax across every line the selection touches
+         * @param {string} markdownContent - Full editor content
+         * @param {number} selectionStart - Caret or selection start offset
+         * @param {number} selectionEnd - Selection end offset
+         * @param {string} blockPrefix - Marker to toggle, e.g. '## ' or '- [ ] '
+         * @returns {{updatedContent: string, updatedSelectionStart: number, updatedSelectionEnd: number}}
+         * @description
+         * Expands the selection to whole lines first, so the marker always lands
+         * at the start of a line rather than wherever the caret happened to be.
+         * Removes the marker when every non-empty line already has it, otherwise
+         * strips any competing block marker and applies the new one. Ordered lists
+         * are renumbered from one.
+         */
+        applyBlockSyntax(
+          markdownContent,
+          selectionStart,
+          selectionEnd,
+          blockPrefix,
         ) {
-          return syntaxBefore === '```'
-            ? `${textBeforeSelection}${syntaxBefore}\n${selectedText}\n${syntaxAfter}${textAfterSelection}`
-            : `${textBeforeSelection}${syntaxBefore}${selectedText}${syntaxAfter}${textAfterSelection}`
+          const appliedPattern = BLOCK_SYNTAX_PATTERNS[blockPrefix]
+
+          const blockStart =
+            markdownContent.lastIndexOf('\n', selectionStart - 1) + 1
+
+          const nextNewlineIndex = markdownContent.indexOf('\n', selectionEnd)
+
+          const blockEnd =
+            nextNewlineIndex === -1 ? markdownContent.length : nextNewlineIndex
+
+          const blockLines = markdownContent
+            .slice(blockStart, blockEnd)
+            .split('\n')
+
+          const filledLines = blockLines.filter(
+            (blockLine) => blockLine.trim() !== '',
+          )
+
+          const isAlreadyApplied =
+            filledLines.length > 0 &&
+            filledLines.every((blockLine) => appliedPattern.test(blockLine))
+
+          let orderedListNumber = 0
+
+          const updatedLines = blockLines.map((blockLine) => {
+            if (blockLine.trim() === '') {
+              return blockLine
+            }
+
+            const bareLine = blockLine.replace(ANY_BLOCK_SYNTAX, '')
+
+            if (isAlreadyApplied) {
+              return bareLine
+            }
+
+            orderedListNumber += 1
+
+            return blockPrefix === '1. '
+              ? `${orderedListNumber}. ${bareLine}`
+              : `${blockPrefix}${bareLine}`
+          })
+
+          const updatedBlock = updatedLines.join('\n')
+          const lengthDelta = updatedBlock.length - (blockEnd - blockStart)
+          const isCollapsedSelection = selectionStart === selectionEnd
+
+          const collapsedCaret = Math.max(
+            blockStart,
+            selectionStart + lengthDelta,
+          )
+
+          return {
+            updatedContent: `${markdownContent.slice(0, blockStart)}${updatedBlock}${markdownContent.slice(blockEnd)}`,
+            updatedSelectionStart: isCollapsedSelection
+              ? collapsedCaret
+              : blockStart,
+            updatedSelectionEnd: isCollapsedSelection
+              ? collapsedCaret
+              : blockStart + updatedBlock.length,
+          }
         },
 
-        stripSyntaxMarkers(
-          textBeforeSelection,
-          textAfterSelection,
-          selectedText,
+        /**
+         * Wraps or unwraps the selection with paired inline syntax
+         * @param {string} markdownContent - Full editor content
+         * @param {number} selectionStart - Caret or selection start offset
+         * @param {number} selectionEnd - Selection end offset
+         * @param {string} syntaxBefore - Opening marker, e.g. '**'
+         * @param {string} syntaxAfter - Closing marker, e.g. '**'
+         * @returns {{updatedContent: string, updatedSelectionStart: number, updatedSelectionEnd: number}}
+         * @description
+         * Only unwraps when the markers genuinely bracket the selection — either
+         * just inside it or immediately outside it. Checking for the marker
+         * anywhere in the selection would strip the underscore out of snake_case.
+         * With nothing selected the caret lands between the markers, ready to type.
+         */
+        applyInlineSyntax(
+          markdownContent,
+          selectionStart,
+          selectionEnd,
           syntaxBefore,
-          syntaxAfter = '',
+          syntaxAfter,
         ) {
-          const updatedSelectedMarkdown = selectedText
-            .replace(syntaxBefore, '')
-            .replace(syntaxAfter, '')
+          const selectedText = markdownContent.slice(
+            selectionStart,
+            selectionEnd,
+          )
 
-          return `${textBeforeSelection}${updatedSelectedMarkdown}${textAfterSelection}`
+          const isFencedBlock = syntaxBefore === '```'
+          const openMarker = isFencedBlock ? '```\n' : syntaxBefore
+          const closeMarker = isFencedBlock ? '\n```' : syntaxAfter
+
+          const isWrappedInside =
+            selectedText.length >= openMarker.length + closeMarker.length &&
+            selectedText.startsWith(openMarker) &&
+            selectedText.endsWith(closeMarker)
+
+          if (isWrappedInside) {
+            const unwrappedText = selectedText.slice(
+              openMarker.length,
+              selectedText.length - closeMarker.length,
+            )
+
+            return {
+              updatedContent: `${markdownContent.slice(0, selectionStart)}${unwrappedText}${markdownContent.slice(selectionEnd)}`,
+              updatedSelectionStart: selectionStart,
+              updatedSelectionEnd: selectionStart + unwrappedText.length,
+            }
+          }
+
+          const isWrappedOutside =
+            markdownContent.slice(
+              selectionStart - openMarker.length,
+              selectionStart,
+            ) === openMarker &&
+            markdownContent.slice(
+              selectionEnd,
+              selectionEnd + closeMarker.length,
+            ) === closeMarker
+
+          if (isWrappedOutside) {
+            const unwrappedStart = selectionStart - openMarker.length
+
+            return {
+              updatedContent: `${markdownContent.slice(0, unwrappedStart)}${selectedText}${markdownContent.slice(selectionEnd + closeMarker.length)}`,
+              updatedSelectionStart: unwrappedStart,
+              updatedSelectionEnd: unwrappedStart + selectedText.length,
+            }
+          }
+
+          return {
+            updatedContent: `${markdownContent.slice(0, selectionStart)}${openMarker}${selectedText}${closeMarker}${markdownContent.slice(selectionEnd)}`,
+            updatedSelectionStart: selectionStart + openMarker.length,
+            updatedSelectionEnd:
+              selectionStart + openMarker.length + selectedText.length,
+          }
+        },
+
+        /**
+         * Indents or outdents the lines the selection touches
+         * @param {string} markdownContent - Full editor content
+         * @param {number} selectionStart - Caret or selection start offset
+         * @param {number} selectionEnd - Selection end offset
+         * @param {boolean} shouldOutdent - True when Shift was held
+         * @returns {{updatedContent: string, updatedSelectionStart: number, updatedSelectionEnd: number}}
+         */
+        applyIndent(
+          markdownContent,
+          selectionStart,
+          selectionEnd,
+          shouldOutdent,
+        ) {
+          const isCollapsedSelection = selectionStart === selectionEnd
+
+          if (isCollapsedSelection && !shouldOutdent) {
+            const caretAfterIndent = selectionStart + INDENT.length
+
+            return {
+              updatedContent: `${markdownContent.slice(0, selectionStart)}${INDENT}${markdownContent.slice(selectionEnd)}`,
+              updatedSelectionStart: caretAfterIndent,
+              updatedSelectionEnd: caretAfterIndent,
+            }
+          }
+
+          const blockStart =
+            markdownContent.lastIndexOf('\n', selectionStart - 1) + 1
+
+          const nextNewlineIndex = markdownContent.indexOf('\n', selectionEnd)
+
+          const blockEnd =
+            nextNewlineIndex === -1 ? markdownContent.length : nextNewlineIndex
+
+          const updatedBlock = markdownContent
+            .slice(blockStart, blockEnd)
+            .split('\n')
+            .map((blockLine) =>
+              shouldOutdent
+                ? blockLine.replace(OUTDENT_PATTERN, '')
+                : `${INDENT}${blockLine}`,
+            )
+            .join('\n')
+
+          return {
+            updatedContent: `${markdownContent.slice(0, blockStart)}${updatedBlock}${markdownContent.slice(blockEnd)}`,
+            updatedSelectionStart: blockStart,
+            updatedSelectionEnd: blockStart + updatedBlock.length,
+          }
         },
 
         enforceSizeLimit(markdownContent) {
@@ -996,12 +1537,14 @@
       }
 
       const notificationService = {
-        createNotification(textContent) {
+        createNotification(textContent, iconText, isAssertive) {
           const notificationId = Date.now() + Math.random()
 
           return {
             notificationId,
             textContent,
+            iconText,
+            isAssertive,
             isVisible: false,
           }
         },
@@ -1055,6 +1598,35 @@
 
       document.addEventListener('alpine:init', () => {
         /**
+         * Edge fades for the horizontally scrolling toolbar
+         * @description
+         * The scrollbar is hidden, so without these there is nothing to say the
+         * toolbar continues past the viewport on narrow screens.
+         */
+        Alpine.data('scrollFade', () => ({
+          canScrollStart: false,
+          canScrollEnd: false,
+
+          init() {
+            this.updateScrollState()
+
+            new ResizeObserver(() => this.updateScrollState()).observe(
+              this.$refs.scroller,
+            )
+          },
+
+          updateScrollState() {
+            const scrollerElement = this.$refs.scroller
+
+            this.canScrollStart = scrollerElement.scrollLeft > 1
+
+            this.canScrollEnd =
+              scrollerElement.scrollLeft + scrollerElement.clientWidth <
+              scrollerElement.scrollWidth - 1
+          },
+        }))
+
+        /**
          * Main Alpine.js component for TinyMarkdown editor
          * @description
          * Real-time markdown editor with live preview, secure sanitization, revision history,
@@ -1072,33 +1644,34 @@
          * - contentMarkdown: Current markdown text (persisted to browser storage)
          * - contentHtml: Rendered HTML preview (sanitized for security)
          * - contentRevisions: Array of timestamped revision objects
-         * - surfacePanelClass: Shared Tailwind class string for bordered UI surfaces
          * - toolbarGroupClass: Shared Tailwind class string for grouped button wrappers
          * - toolbarButtonClass: Shared Tailwind class string for square toolbar buttons
          * - menuTriggerButtonClass: Shared Tailwind class string for revision menu trigger
          * - notificationMessages: Active notification queue for stacked alerts
          * - notificationTimeouts: Timeout ids keyed by notification id
          * - isFullscreen: Boolean toggle to hide preview pane for full-width editing
+         * - isTabCaptured: Whether Tab indents (true) or moves focus (false, after Escape)
          * - showRevisionMenu: Boolean toggle for revision menu visibility
          */
         Alpine.data('markdownEditor', () => ({
-          contentMarkdown: Alpine.$persist('# Hello there...'),
+          contentMarkdown: Alpine.$persist(DEFAULT_MARKDOWN),
           contentHtml: '',
           contentRevisions: [],
-          surfacePanelClass:
-            'dark:border-[#333] dark:bg-black dark:text-white bg-white border-[#EAEAEA]',
           toolbarGroupClass:
-            'flex items-center gap-1 p-1 border rounded-lg border-[#EAEAEA] bg-white dark:border-[#333] dark:bg-black',
+            'flex items-center gap-1 p-1 border rounded-lg bg-surface border-line',
           toolbarButtonClass:
-            'size-8 rounded-md grid place-content-center text-xs font-medium dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset',
+            'size-8 rounded-md grid place-content-center text-xs font-medium text-ink transition-colors hover:bg-hover active:bg-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
           menuTriggerButtonClass:
-            'h-8 px-2 rounded-md dark:text-white text-black transition-colors hover:bg-[#F3F3F3] dark:hover:bg-[#1A1A1A] active:bg-[#EDEDED] dark:active:bg-[#222] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-500 focus-visible:ring-inset flex items-center gap-2',
+            'h-8 px-2 rounded-md text-ink transition-colors hover:bg-hover active:bg-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset flex items-center gap-2',
           selectedRevisionKey: DEFAULT_REVISION_KEY,
           selectedRevisionLabel: DEFAULT_REVISION_LABEL,
           notificationMessages: [],
           notificationTimeouts: {},
           isFullscreen: Alpine.$persist(false),
+          isTabCaptured: true,
           showRevisionMenu: false,
+          shortcutModifier: SHORTCUT_MODIFIER,
+          characterLimitLabel: MAX_MARKDOWN_SIZE.toLocaleString(),
 
           /**
            * Initializes component state
@@ -1106,6 +1679,23 @@
            */
           init() {
             this.setRevisions()
+          },
+
+          get characterCount() {
+            return this.contentMarkdown.length
+          },
+
+          get wordCount() {
+            const trimmedContent = this.contentMarkdown.trim()
+
+            return trimmedContent ? trimmedContent.split(/\s+/).length : 0
+          },
+
+          get isNearSizeLimit() {
+            return (
+              this.contentMarkdown.length >=
+              MAX_MARKDOWN_SIZE * NEAR_SIZE_LIMIT_RATIO
+            )
           },
 
           /**
@@ -1166,101 +1756,81 @@
           },
 
           /**
-           * Wraps or unwraps selected text with markdown syntax markers
-           * @param {string} syntaxBefore - Opening syntax marker (e.g., '**' for bold)
-           * @param {string} syntaxAfter - Closing syntax marker (e.g., '**' for bold)
+           * Applies a toolbar or shortcut formatting action
+           * @param {string} syntaxBefore - Opening marker, or the full marker for block syntax
+           * @param {string} [syntaxAfter] - Closing marker for inline syntax
            * @description
-           * Intelligently toggles formatting - removes syntax if already applied,
-           * adds if not. Special handling for code blocks (adds newlines).
-           * Returns focus to textarea after modification.
+           * Block markers (headings, lists, quotes, tasks) go to the start of every
+           * line the selection touches. Inline markers wrap the selection itself.
            */
           modifyMarkdown(syntaxBefore, syntaxAfter) {
             const markdownTextarea = this.$refs.textarea
 
-            const markdownTextStart = markdownTextarea.selectionStart
-            const markdownTextEnd = markdownTextarea.selectionEnd
+            const isBlockSyntax =
+              !syntaxAfter &&
+              Object.hasOwn(BLOCK_SYNTAX_PATTERNS, syntaxBefore)
 
-            const markdownSelectedText = markdownTextarea.value.slice(
-              markdownTextStart,
-              markdownTextEnd,
-            )
-
-            const markdownTextBeforeSelection = markdownTextarea.value.slice(
-              0,
-              markdownTextStart,
-            )
-
-            const markdownTextAfterSelection =
-              markdownTextarea.value.slice(markdownTextEnd)
-
-            this.contentMarkdown = markdownSelectedText.includes(syntaxBefore)
-              ? this.modifyMarkdownRemove(
-                  markdownTextBeforeSelection,
-                  markdownTextAfterSelection,
-                  markdownSelectedText,
+            const syntaxResult = isBlockSyntax
+              ? markdownService.applyBlockSyntax(
+                  markdownTextarea.value,
+                  markdownTextarea.selectionStart,
+                  markdownTextarea.selectionEnd,
                   syntaxBefore,
-                  syntaxAfter,
                 )
-              : this.modifyMarkdownAdd(
-                  markdownTextBeforeSelection,
-                  markdownTextAfterSelection,
-                  markdownSelectedText,
+              : markdownService.applyInlineSyntax(
+                  markdownTextarea.value,
+                  markdownTextarea.selectionStart,
+                  markdownTextarea.selectionEnd,
                   syntaxBefore,
-                  syntaxAfter,
+                  syntaxAfter ?? '',
                 )
 
-            markdownTextarea.focus()
+            this.applySyntaxResult(syntaxResult)
           },
 
           /**
-           * Adds syntax markers around selected text
-           * @param {string} textBeforeSelection - Markdown content before selection
-           * @param {string} textAfterSelection - Markdown content after selection
-           * @param {string} selectedText - Currently selected text to wrap
-           * @param {string} syntaxBefore - Opening syntax marker to apply
-           * @param {string} syntaxAfter - Closing syntax marker (optional)
-           * @returns {string} Modified markdown with syntax applied
-           * @description Special handling for code blocks (```) adds newlines for readability.
+           * Writes a syntax result back to the editor and restores the selection
+           * @param {{updatedContent: string, updatedSelectionStart: number, updatedSelectionEnd: number}} syntaxResult
            */
-          modifyMarkdownAdd(
-            textBeforeSelection,
-            textAfterSelection,
-            selectedText,
-            syntaxBefore,
-            syntaxAfter = '',
-          ) {
-            return markdownService.applySyntaxMarkers(
-              textBeforeSelection,
-              textAfterSelection,
-              selectedText,
-              syntaxBefore,
-              syntaxAfter,
-            )
+          applySyntaxResult(syntaxResult) {
+            const markdownTextarea = this.$refs.textarea
+
+            this.contentMarkdown = syntaxResult.updatedContent
+
+            this.$nextTick(() => {
+              markdownTextarea.focus()
+
+              markdownTextarea.setSelectionRange(
+                syntaxResult.updatedSelectionStart,
+                syntaxResult.updatedSelectionEnd,
+              )
+            })
           },
 
           /**
-           * Removes syntax markers from selected text
-           * @param {string} textBeforeSelection - Markdown content before selection
-           * @param {string} textAfterSelection - Markdown content after selection
-           * @param {string} selectedText - Currently selected text to unwrap
-           * @param {string} syntaxBefore - Opening syntax marker to remove
-           * @param {string} syntaxAfter - Closing syntax marker to remove (optional)
-           * @returns {string} Modified markdown with syntax removed
-           * @description Removes first occurrence of each marker from selection.
+           * Indents with Tab, or lets Tab move focus once Escape has been pressed
+           * @param {KeyboardEvent} keyEvent - The Tab keydown event
+           * @description
+           * Trapping Tab is what makes indented code and nested lists workable, but
+           * it also traps keyboard users. Escape releases the trap so the next Tab
+           * leaves the editor; focusing the textarea again re-arms it.
            */
-          modifyMarkdownRemove(
-            textBeforeSelection,
-            textAfterSelection,
-            selectedText,
-            syntaxBefore,
-            syntaxAfter = '',
-          ) {
-            return markdownService.stripSyntaxMarkers(
-              textBeforeSelection,
-              textAfterSelection,
-              selectedText,
-              syntaxBefore,
-              syntaxAfter,
+          handleTabKey(keyEvent) {
+            if (!this.isTabCaptured) {
+              return
+            }
+
+            keyEvent.preventDefault()
+
+            const markdownTextarea = this.$refs.textarea
+
+            this.applySyntaxResult(
+              markdownService.applyIndent(
+                markdownTextarea.value,
+                markdownTextarea.selectionStart,
+                markdownTextarea.selectionEnd,
+                keyEvent.shiftKey,
+              ),
             )
           },
 
@@ -1272,9 +1842,12 @@
             try {
               await navigator.clipboard.writeText(this.contentMarkdown)
 
-              this.showNotification('🎉 Copied to clipboard!')
+              this.showNotification('Copied to clipboard', { iconText: '🎉' })
             } catch {
-              this.showNotification('❌ Unable to copy to clipboard')
+              this.showNotification(
+                'Your browser blocked clipboard access. Select the text and copy it manually.',
+                { iconText: '❌', isAssertive: true },
+              )
             }
           },
 
@@ -1293,20 +1866,33 @@
             this.contentMarkdown = markdownSizeValidation.validatedContent
 
             if (markdownSizeValidation.exceedsSizeLimit) {
-              this.showNotification('❌ Content limited to 50KB')
+              this.showNotification(
+                `Trimmed to the ${this.characterLimitLabel} character limit`,
+                { iconText: '⚠️', isAssertive: true },
+              )
             }
           },
 
           /**
            * Saves current markdown as a timestamped revision to localStorage
            * @description
-           * Stores with key pattern _TM_{timestamp}. Auto-triggered after 10s of inactivity
-           * (debounced) and manually via Save Revision button. Updates revision list after save.
+           * Stores with key pattern _TM_{timestamp}. Auto-triggered after 20s of inactivity
+           * (debounced) and manually via the Save revision button.
            */
           saveRevision() {
             revisionStore.saveEntry(this.contentMarkdown)
 
             this.setRevisions()
+          },
+
+          /**
+           * Saves a revision from the toolbar and confirms it
+           * @description Autosave stays silent; an explicit save gets an explicit response.
+           */
+          saveRevisionManually() {
+            this.saveRevision()
+
+            this.showNotification('Revision saved', { iconText: '📌' })
           },
 
           /**
@@ -1411,41 +1997,138 @@
           exportMarkdownDocument() {
             exportService.exportMarkdown(this.contentMarkdown)
 
-            this.showNotification('🎉 Exported as markdown')
+            this.showNotification('Exported as markdown', { iconText: '🎉' })
+          },
+
+          /**
+           * Schedules a preview render
+           * @description
+           * Tracked by x-effect, so it reads contentMarkdown synchronously and then
+           * debounces the actual parse. Without the debounce every keystroke reparses
+           * and rebuilds the whole preview, which is the difference between typing
+           * feeling instant and feeling like it is fighting the page.
+           */
+          refreshHtml() {
+            const markdownContent = this.contentMarkdown
+
+            if (!hasRenderedInitialHtml) {
+              hasRenderedInitialHtml = true
+
+              this.renderHtml(markdownContent)
+
+              return
+            }
+
+            clearTimeout(renderTimeoutId)
+
+            renderTimeoutId = setTimeout(
+              () => this.renderHtml(markdownContent),
+              RENDER_DEBOUNCE,
+            )
           },
 
           /**
            * Parses markdown to HTML and sanitizes for secure display
+           * @param {string} markdownContent - Markdown to render
            * @description
            * Uses marked.js to convert markdown to HTML and sanitizes output with DOMPurify
            * to prevent XSS attacks. If parsing fails, uses a strict DOMPurify allowlist
            * to render the raw markdown content as sanitized fallback output.
-           * Called reactively whenever contentMarkdown changes.
+           * Preserves preview scroll position across the swap, and only warns when
+           * the document first fails to parse rather than on every keystroke.
            */
-          refreshHtml() {
-            const renderedMarkdown = markdownService.renderSanitizedHtml(
-              this.contentMarkdown,
-            )
+          renderHtml(markdownContent) {
+            const previewElement = this.$refs.preview
+            const previousScrollTop = previewElement?.scrollTop ?? 0
+
+            const renderedMarkdown =
+              markdownService.renderSanitizedHtml(markdownContent)
 
             this.contentHtml = renderedMarkdown.sanitizedHtml
 
-            if (renderedMarkdown.containsParseError) {
+            if (renderedMarkdown.containsParseError && !hasPreviewParseError) {
               this.showNotification(
-                '⚠️ Markdown parsing error - preview unavailable',
+                'Preview unavailable. Check for an unclosed code fence or table.',
+                { iconText: '⚠️', isAssertive: true },
               )
             }
+
+            hasPreviewParseError = renderedMarkdown.containsParseError
+
+            this.$nextTick(() => {
+              if (previewElement) {
+                this.withScrollLock(() => {
+                  previewElement.scrollTop = previousScrollTop
+                })
+              }
+            })
+          },
+
+          /**
+           * Runs a programmatic scroll without it echoing back through scroll sync
+           * @param {Function} scrollAction - The scroll mutation to perform
+           */
+          withScrollLock(scrollAction) {
+            isSyncingScroll = true
+
+            scrollAction()
+
+            requestAnimationFrame(() => {
+              isSyncingScroll = false
+            })
+          },
+
+          /**
+           * Keeps the editor and preview at the same relative scroll position
+           * @param {HTMLElement} sourceElement - The pane the user scrolled
+           * @param {HTMLElement} targetElement - The pane to follow along
+           * @description
+           * Proportional rather than line-mapped, which is imprecise on documents
+           * with tall images or code blocks but costs nothing and is far better
+           * than the two panes drifting apart. Only runs in the side-by-side layout.
+           */
+          syncPaneScroll(sourceElement, targetElement) {
+            if (isSyncingScroll || !targetElement) {
+              return
+            }
+
+            if (!globalThis.matchMedia(DESKTOP_MEDIA_QUERY).matches) {
+              return
+            }
+
+            const sourceScrollable =
+              sourceElement.scrollHeight - sourceElement.clientHeight
+
+            const targetScrollable =
+              targetElement.scrollHeight - targetElement.clientHeight
+
+            if (sourceScrollable <= 0 || targetScrollable <= 0) {
+              return
+            }
+
+            this.withScrollLock(() => {
+              targetElement.scrollTop =
+                (sourceElement.scrollTop / sourceScrollable) * targetScrollable
+            })
           },
 
           /**
            * Displays a temporary notification message to the user
-           * @param {string} textContent - Message text to display (supports emojis)
+           * @param {string} textContent - Message text, read aloud by assistive tech
+           * @param {{iconText?: string, isAssertive?: boolean}} [notificationOptions]
            * @description
-           * Adds a notification to the queue and auto-hides it after 2.5 seconds.
-           * Multiple notifications can be displayed concurrently.
+           * The icon is kept out of textContent so screen readers announce the
+           * message rather than the name of an emoji. Only messages that need to
+           * interrupt are assertive; confirmations wait their turn.
            */
-          showNotification(textContent) {
-            const notificationMessage =
-              notificationService.createNotification(textContent)
+          showNotification(textContent, notificationOptions = {}) {
+            const { iconText = '', isAssertive = false } = notificationOptions
+
+            const notificationMessage = notificationService.createNotification(
+              textContent,
+              iconText,
+              isAssertive,
+            )
 
             this.notificationMessages = notificationService.addNotification(
               this.notificationMessages,
@@ -1536,11 +2219,30 @@
           },
 
           /**
-           * Resets editor to initial state
-           * @description Sets markdown to default greeting message.
+           * Clears the editor back to the starter document
+           * @description
+           * Saves the outgoing draft as a revision first, so an accidental click is
+           * recoverable from the revision menu instead of needing a confirm dialog.
            */
-          refreshComponent() {
-            this.contentMarkdown = '# Hello there...'
+          startOver() {
+            const hasDraftWorthKeeping =
+              this.contentMarkdown.trim() !== '' &&
+              this.contentMarkdown !== DEFAULT_MARKDOWN
+
+            if (!hasDraftWorthKeeping) {
+              this.contentMarkdown = DEFAULT_MARKDOWN
+
+              return
+            }
+
+            this.saveRevision()
+
+            this.contentMarkdown = DEFAULT_MARKDOWN
+
+            this.showNotification(
+              'Cleared. Your previous draft is in the revision menu.',
+              { iconText: '↩️' },
+            )
           },
 
           /**
